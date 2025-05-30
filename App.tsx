@@ -3,11 +3,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Import các màn hình
+import IndexLogin from './screens/IndexLogin';
+import VitualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
-import ChoosePetScreen from './screens/ChoosePetScreen'; 
+import ChoosePetScreen from './screens/ChoosePetScreen';
 
 // Định nghĩa kiểu param list cho stack navigator
 export type RootStackParamList = {
+  IndexLogin: undefined;
+  VitualPetLogin: undefined;
   RegisterScreen: undefined;
   ChoosePetScreen: undefined;
 };
@@ -17,7 +21,17 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="RegisterScreen">
+      <Stack.Navigator initialRouteName="IndexLogin">
+        <Stack.Screen
+          name="IndexLogin"
+          component={IndexLogin}
+          options={{ title: 'ようこそ' }}
+        />
+        <Stack.Screen
+          name="VitualPetLogin"
+          component={VitualPetLogin}
+          options={{ title: 'ログイン' }}
+        />
         <Stack.Screen
           name="RegisterScreen"
           component={RegisterScreen}

@@ -1,211 +1,187 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  Image,
-  ScrollView
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import styles from '../scripts/RegisterStyles';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-
-type Gender = '男' | '女';
-type Goal = '体重を落としたい' | '体重を増やしたい';
-type HealthStatus = '元気' | '疲れ' | '病気';
-
-type RootStackParamList = {
-  RegisterScreen: undefined;
-  ChoosePetScreen: undefined;
-  // Thêm các màn hình khác nếu có
-};
-type RegisterScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'RegisterScreen'
->;
-
-interface Props {
-  navigation: RegisterScreenNavigationProp;
-  route?: RouteProp<RootStackParamList, 'RegisterScreen'>;
-}
-interface FormState {
-  name: string;
-  age: string;
-  gender: Gender;
-  height: string;
-  weight: string;
-  goal: Goal;
-  steps: string;
-  goalWeight: string;
-  health: HealthStatus | '';
-}
-
-export default function RegisterScreen({navigation}:Props) {
-  const [form, setForm] = useState<FormState>({
-    name: '',
-    age: '',
-    gender: '女',
-    height: '',
-    weight: '',
-    goal: '体重を落としたい',
-    steps: '',
-    goalWeight: '',
-    health: '',
-  });
-
-  const handleChange = <K extends keyof FormState>(name: K, value: FormState[K]) => {
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleHealthSelect = (status: HealthStatus) => {
-    setForm({ ...form, health: status });
-  };
-
-  const handleSubmit = () => {
-    
-    Alert.alert('登録しました！');
-    navigation.navigate('ChoosePetScreen');
-  };
-
+import { useState } from 'react';
+ 
+export default function RegisterScreen() {
+  const [name, setName] = useState('');
+  const [emailName, setEmailName] = useState('');
+  const [emailDomain, setEmailDomain] = useState('gmail.com');
+  const [password, setPassword] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('女');
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+ 
   return (
-    <View style= {{flex:1}}>
-
-    
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.form}>
-        <Text style={styles.title}>App name にようこそ！</Text>
-
-        <Text style={styles.label}>名前</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>バーチャルペット にようこそ！</Text>
+ 
+      {/* 名前 */}
+      <Text style={styles.label}>名前</Text>
+      <TextInput
+        style={[styles.input, focusedField === 'name' && styles.inputFocused]}
+        placeholder="ヘルス タロウ"
+        value={name}
+        onChangeText={setName}
+        onFocus={() => setFocusedField('name')}
+        onBlur={() => setFocusedField(null)}
+      />
+ 
+      {/* メールアドレス */}
+      <Text style={styles.label}>メールアドレス</Text>
+      <View style={styles.emailRow}>
         <TextInput
-          style={styles.input}
-          placeholder="ヘルスくん"
-          value={form.name}
-          onChangeText={(text) => handleChange('name', text)}
+          style={[styles.emailInput, focusedField === 'email' && styles.inputFocused]}
+          placeholder="youremail@gamil.com"
+          value={emailName}
+          onChangeText={setEmailName}
+          onFocus={() => setFocusedField('email')}
+          onBlur={() => setFocusedField(null)}
         />
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>年齢</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.age}
-                onChangeText={(text) => handleChange('age', text)}
-              />
-              <Text style={styles.inlineText}>歳</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>性別</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={form.gender}
-                onValueChange={(value) => handleChange('gender', value as Gender)}
-              >
-                <Picker.Item label="女" value="女" />
-                <Picker.Item label="男" value="男" />
-              </Picker>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>身長</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.height}
-                onChangeText={(text) => handleChange('height', text)}
-              />
-              <Text style={styles.inlineText}>cm</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>今の体重</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.weight}
-                onChangeText={(text) => handleChange('weight', text)}
-              />
-              <Text style={styles.inlineText}>kg</Text>
-            </View>
+      </View>
+ 
+      {/* パスワード */}
+      <Text style={styles.label}>パスワード</Text>
+      <TextInput
+        style={[styles.input, focusedField === 'password' && styles.inputFocused]}
+        placeholder="パスワード"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        onFocus={() => setFocusedField('password')}
+        onBlur={() => setFocusedField(null)}
+      />
+ 
+      {/* 年齢・性別 */}
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <Text style={styles.label}>年齢</Text>
+          <View style={styles.ageRow}>
+            <TextInput
+              style={[styles.input, focusedField === 'age' && styles.inputFocused]}
+              placeholder="28"
+              keyboardType="numeric"
+              value={age}
+              onChangeText={setAge}
+              onFocus={() => setFocusedField('age')}
+              onBlur={() => setFocusedField(null)}
+            />
+            <Text style={styles.at}>歳</Text>
           </View>
         </View>
-
-        <Text style={styles.label}>目標</Text>
-        <View style={styles.pickerWrapper}>
+        <View style={styles.half}>
+          <Text style={styles.label}>性別</Text>
           <Picker
-            selectedValue={form.goal}
-            onValueChange={(value) => handleChange('goal', value as Goal)}
+            selectedValue={gender}
+            onValueChange={(itemValue) => setGender(itemValue)}
+            style={styles.picker}
           >
-            <Picker.Item label="体重を落としたい" value="体重を落としたい" />
-            <Picker.Item label="体重を増やしたい" value="体重を増やしたい" />
+            <Picker.Item label="女" value="女" />
+            <Picker.Item label="男" value="男" />
+            <Picker.Item label="その他" value="その他" />
           </Picker>
         </View>
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>目標歩数</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.steps}
-                onChangeText={(text) => handleChange('steps', text)}
-              />
-              <Text style={styles.inlineText}>歩</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>目標体重</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.goalWeight}
-                onChangeText={(text) => handleChange('goalWeight', text)}
-              />
-              <Text style={styles.inlineText}>kg</Text>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.label}>今の健康状態</Text>
-        <View style={styles.healthOptions}>
-          {(['元気', '疲れ', '病気'] as HealthStatus[]).map((status) => (
-            <TouchableOpacity
-              key={status}
-              style={styles.healthIcon}
-              onPress={() => handleHealthSelect(status)}
-            >
-              <Image
-                source={{ uri: `https://placehold.co/60x60?text=${status}` }}
-                style={[
-                  styles.healthImage,
-                  // form.health === status && styles.healthImageSelected
-                ]}
-              />
-              <Text>{status}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>登録</Text>
-        </TouchableOpacity>
       </View>
-    </ScrollView>
+ 
+      {/* 次へ */}
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>次へ</Text>
+      </TouchableOpacity>
     </View>
   );
 }
+ 
+// ↓↓↓ ここが内部 StyleSheet ↓↓↓
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F4F0FF',
+    padding: 24,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 28,
+    color: '#4B3EFF',
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D0CDE1',
+    fontSize: 15,
+    marginBottom: 16,
+  },
+  inputFocused: {
+    borderColor: '#A78BFA',
+    borderWidth: 2,
+  },
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emailInput: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D0CDE1',
+    fontSize: 15,
+  },
+  at: {
+    fontSize: 15,
+    color: '#555',
+    marginLeft: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 16,
+    marginBottom: 28,
+  },
+  half: {
+    flex: 1,
+  },
+  ageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width:'50%',
+  },
+  picker: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderColor: '#D0CDE1',
+    borderWidth: 1,
+    height: 48,
+    justifyContent: 'center',
+  },
+  button: {
+    backgroundColor: '#7A6FFF',
+    paddingVertical: 14,
+    borderRadius: 25,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+});
