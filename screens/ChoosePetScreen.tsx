@@ -12,6 +12,7 @@ import { Picker } from '@react-native-picker/picker';
 import styles from '../scripts/RegisterStyles';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { useUserRegister } from '../contexts/UserRegisterContext';
 
 type Gender = '男' | '女';
 type Goal = '体重を落としたい' | '体重を増やしたい';
@@ -29,12 +30,9 @@ type RegisterScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: RegisterScreenNavigationProp;
-  route?: RouteProp<RootStackParamList, 'RegisterScreen'>;
+  route?: RouteProp<RootStackParamList, 'ChoosePetScreen'>;
 }
 interface FormState {
-  name: string;
-  age: string;
-  gender: Gender;
   height: string;
   weight: string;
   goal: Goal;
@@ -44,10 +42,9 @@ interface FormState {
 }
 
 export default function RegisterScreen({navigation}:Props) {
+  const { userData } = useUserRegister();
+
   const [form, setForm] = useState<FormState>({
-    name: '',
-    age: '',
-    gender: '女',
     height: '',
     weight: '',
     goal: '体重を落としたい',
@@ -64,10 +61,39 @@ export default function RegisterScreen({navigation}:Props) {
     setForm({ ...form, health: status });
   };
 
-  const handleSubmit = () => {
-    
-    Alert.alert('登録しました！');
-    navigation.navigate('ChoosePetScreen');
+  const handleSubmit = async () => {
+    const finalData = {
+      ...userData,
+      height: parseInt(form.height),
+      weight: parseInt(form.weight),
+      goal: form.goal,
+      steps: parseInt(form.steps),
+      goalWeight: parseInt(form.goalWeight),
+      health: form.health,
+    };
+
+    try{
+      console.log('Form values:', form);
+console.log('Final data to send:', finalData);
+      const response = await fetch('http://localhost:3000/users', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(finalData),
+      });
+
+      if(!response.ok){
+        throw new Error('Failed to register!');
+      }
+
+      const data = await response.json();
+      Alert.alert('登録しました！');
+    } catch (error) {
+        if (error instanceof Error) {
+          Alert.alert('エラー', error.message);
+        } else {
+          Alert.alert('エラー', '予期しないエラーが発生しました');
+        }
+    }
   };
 
   return (
@@ -76,9 +102,9 @@ export default function RegisterScreen({navigation}:Props) {
     
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.form}>
-        <Text style={styles.title}>App name にようこそ！</Text>
+        <Text style={styles.title}>もう少し教えてね！</Text>
 
-        <Text style={styles.label}>名前</Text>
+        {/* <Text style={styles.label}>名前</Text>
         <TextInput
           style={styles.input}
           placeholder="ヘルスくん"
@@ -112,7 +138,7 @@ export default function RegisterScreen({navigation}:Props) {
               </Picker>
             </View>
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.row}>
           <View style={styles.half}>
