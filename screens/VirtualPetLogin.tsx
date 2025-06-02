@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
 import type { RootStackParamList } from '../App';
-
-const navigation = useNavigation();
 
 // Definisikan tipe props yang menerima navigation
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
@@ -43,6 +40,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           await AsyncStorage.setItem('token', data.token);
 
           Alert.alert('Login success!');
+          navigation.navigate('HomeScreen');
         } catch (error) {
             if (error instanceof Error) {
               Alert.alert('エラー', error.message);
@@ -83,7 +81,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
       <TouchableOpacity style={styles.loginButton} onPress={() => {
         handleLogin();
-        navigation.navigate('HomeScreen');
       }}>
         <Text style={styles.loginButtonText}>ログインする</Text>
       </TouchableOpacity>
