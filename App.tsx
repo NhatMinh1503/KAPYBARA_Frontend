@@ -23,7 +23,7 @@ export default function App() {
   return (
     <UserRegisterProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="RegisterScreen">
+        <Stack.Navigator initialRouteName="IndexLogin">
           <Stack.Screen
             name="IndexLogin"
             component={IndexLogin}
