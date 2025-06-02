@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 48,
     justifyContent: 'center',
-    overflow:'hidden',
+    
   },
   button: {
     backgroundColor: '#7A6FFF',

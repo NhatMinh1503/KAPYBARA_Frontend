@@ -1,14 +1,53 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../App';
 
-const LoginScreen = () => {
+// Definisikan tipe props yang menerima navigation
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
+
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [emailName, setEmailName] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const fullEmail = `${emailName}@gmail.com`;
     console.log('Logging in with:', fullEmail, password);
     // xử lý đăng nhập ở đây
+
+    const finalData = {
+      email: fullEmail,
+      password,
+    }
+
+    try{
+          const response = await fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(finalData),
+          });
+    
+          if(!response.ok){
+            throw new Error('Failed to register!');
+          }
+    
+          const data = await response.json();
+          await AsyncStorage.setItem('token', data.token);
+
+          Alert.alert('Login success!');
+          navigation.navigate('HomeScreen');
+        } catch (error) {
+            if (error instanceof Error) {
+              Alert.alert('エラー', error.message);
+            } else {
+              Alert.alert('エラー', '予期しないエラーが発生しました');
+            }
+        }
   };
 
   return (
@@ -21,7 +60,7 @@ const LoginScreen = () => {
           style={styles.emailInput}
           value={emailName}
           onChangeText={setEmailName}
-          placeholder="youremail.gmail.com"
+          placeholder="youremail@gmail.com"
         />
       </View>
 
@@ -40,14 +79,18 @@ const LoginScreen = () => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+      <TouchableOpacity style={styles.loginButton} onPress={() => {
+        handleLogin();
+      }}>
         <Text style={styles.loginButtonText}>ログインする</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default LoginScreen;const styles = StyleSheet.create({
+export default LoginScreen;
+
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F0F9',
@@ -83,10 +126,6 @@ export default LoginScreen;const styles = StyleSheet.create({
     borderColor: '#D0CDE1',
     borderWidth: 1,
     fontSize: 15,
-  },
-  atMark: {
-    fontSize: 15,
-    color: '#555',
   },
   input: {
     backgroundColor: '#fff',
