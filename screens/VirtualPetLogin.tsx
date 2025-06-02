@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import type { RootStackParamList } from '../App';
 
 const navigation = useNavigation();
 
+// Definisikan tipe props yang menerima navigation
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
-const LoginScreen = () => {
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [emailName, setEmailName] = useState('');
   const [password, setPassword] = useState('');
 
@@ -75,7 +83,7 @@ const LoginScreen = () => {
 
       <TouchableOpacity style={styles.loginButton} onPress={() => {
         handleLogin();
-        // navigation.navigate('HomeScreen');
+        navigation.navigate('HomeScreen');
       }}>
         <Text style={styles.loginButtonText}>ログインする</Text>
       </TouchableOpacity>
@@ -83,7 +91,9 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;const styles = StyleSheet.create({
+export default LoginScreen;
+
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F0F9',
@@ -119,10 +129,6 @@ export default LoginScreen;const styles = StyleSheet.create({
     borderColor: '#D0CDE1',
     borderWidth: 1,
     fontSize: 15,
-  },
-  atMark: {
-    fontSize: 15,
-    color: '#555',
   },
   input: {
     backgroundColor: '#fff',
