@@ -10,6 +10,7 @@ import RegisterScreen from './screens/RegisterScreen';
 import NextRegisterScreen from './screens/NextRegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
 import HomeScreen from './screens/HomeScreen';
+import ReminderScreen from './screens/ReminderScreen';
 
 export type RootStackParamList = {
   IndexLogin: undefined;
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
   HomeScreen: undefined;
+  ReminderScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -56,6 +58,11 @@ export default function App() {
             name="HomeScreen"
             component={HomeScreen}
             options={{ title: 'ホーム画面' }}
+          />
+          <Stack.Screen
+            name="ReminderScreen"
+            component={ReminderScreen}
+            options={{ title: 'リマインダー' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
