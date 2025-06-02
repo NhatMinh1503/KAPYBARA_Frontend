@@ -21,10 +21,10 @@ export default function VitualPetLogin({ navigation }: Props) {
         style={styles.button}
         onPress={() => navigation.navigate('VitualPetLogin')}
       >
-        <Text style={styles.buttonText}>ログイン</Text>
+        <Text style={styles.buttonText} onPress={() => navigation.navigate('VitualPetLogin')}>ログイン</Text>
       </TouchableOpacity>
       <View style={styles.linkContainer}>
-        <Text style={styles.linkText}>はじめての方はこちら　</Text>
+        <Text style={styles.linkText}>はじめての方はこちら</Text>
         <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
           <Text style={[styles.linkText, styles.registerLink]}>アカウント登録</Text>
         </TouchableOpacity>
