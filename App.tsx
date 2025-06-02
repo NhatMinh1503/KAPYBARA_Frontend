@@ -6,13 +6,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import IndexLogin from './screens/IndexLogin';
 import VitualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
+import NextRegisterScreen from './screens/NextRegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
+
 
 // Định nghĩa kiểu param list cho stack navigator
 export type RootStackParamList = {
   IndexLogin: undefined;
   VitualPetLogin: undefined;
   RegisterScreen: undefined;
+  NextRegisterScreen:undefined;
   ChoosePetScreen: undefined;
 };
 
@@ -35,6 +38,11 @@ export default function App() {
         <Stack.Screen
           name="RegisterScreen"
           component={RegisterScreen}
+          options={{ title: 'ユーザー登録' }}
+        />
+        <Stack.Screen
+          name="NextRegisterScreen"
+          component={NextRegisterScreen}
           options={{ title: 'ユーザー登録' }}
         />
         <Stack.Screen
