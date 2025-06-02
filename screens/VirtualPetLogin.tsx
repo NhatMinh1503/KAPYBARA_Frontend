@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../App';
 
-const LoginScreen = () => {
+// Definisikan tipe props yang menerima navigation
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
+
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [emailName, setEmailName] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
     const fullEmail = `${emailName}@gmail.com`;
     console.log('Logging in with:', fullEmail, password);
-    // xử lý đăng nhập ở đây
+    navigation.navigate('HomeScreen');
   };
 
   return (
@@ -47,7 +56,9 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;const styles = StyleSheet.create({
+export default LoginScreen;
+
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F0F9',
@@ -83,10 +94,6 @@ export default LoginScreen;const styles = StyleSheet.create({
     borderColor: '#D0CDE1',
     borderWidth: 1,
     fontSize: 15,
-  },
-  atMark: {
-    fontSize: 15,
-    color: '#555',
   },
   input: {
     backgroundColor: '#fff',

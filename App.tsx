@@ -8,6 +8,7 @@ import IndexLogin from './screens/IndexLogin';
 import VitualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
+import HomeScreen from './screens/HomeScreen';
 
 // Định nghĩa kiểu param list cho stack navigator
 export type RootStackParamList = {
@@ -15,6 +16,7 @@ export type RootStackParamList = {
   VitualPetLogin: undefined;
   RegisterScreen: undefined;
   ChoosePetScreen: undefined;
+  HomeScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -23,7 +25,7 @@ export default function App() {
   return (
     <UserRegisterProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="RegisterScreen">
+        <Stack.Navigator initialRouteName="IndexLogin">
           <Stack.Screen
             name="IndexLogin"
             component={IndexLogin}
@@ -43,6 +45,11 @@ export default function App() {
             name="ChoosePetScreen"
             component={ChoosePetScreen}
             options={{ title: 'ペット選択' }}
+          />
+          <Stack.Screen
+            name="HomeScreen"
+            component={HomeScreen}
+            options={{ title: 'ホーム画面' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
