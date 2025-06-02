@@ -27,7 +27,6 @@ interface Props {
   navigation: HomeScreenNavigationProp;
 }
 
-
 interface WeatherData {
   outsideTemp: number | null;
   roomTemp: number | null;
@@ -43,54 +42,53 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     error: null,
   });
 
-  // Function untuk fetch data dari API
+  // Function to fetch data from API
   const fetchWeatherData = async (): Promise<void> => {
-  try {
-    setWeatherData(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      setWeatherData(prev => ({ ...prev, loading: true, error: null }));
 
-    const cityName = 'Tokyo'; // Ganti sesuai lokasi
-    const apiKey = 'https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=ja'; // Ganti dengan API key kamu
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=ja`
-    );
+      const cityName = 'Tokyo'; // Change to your location
+      const apiKey = 'https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=ja'; // Replace with your API key
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=ja`
+      );
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather data');
+      if (!response.ok) {
+        throw new Error('Failed to fetch weather data');
+      }
+
+      const data = await response.json();
+      console.log('Fetched weather data:', data);
+
+      setWeatherData({
+        outsideTemp: data.main?.temp ?? null,
+        roomTemp: null, // OpenWeatherMap does not have room temperature data
+        loading: false,
+        error: null,
+      });
+    } catch (err) {
+      console.error('Error fetching weather data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setWeatherData(prev => ({
+        ...prev,
+        loading: false,
+        error: errorMessage,
+      }));
     }
+  };
 
-    const data = await response.json();
-    console.log('Fetched weather data:', data);
-
-    setWeatherData({
-      outsideTemp: data.main?.temp ?? null,
-      roomTemp: null, // OpenWeatherMap tidak punya data ruangan
-      loading: false,
-      error: null,
-    });
-  } catch (err) {
-    console.error('Error fetching weather data:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    setWeatherData(prev => ({
-      ...prev,
-      loading: false,
-      error: errorMessage,
-    }));
-  }
-};
-
-
-  // Fetch data saat component mount
+  // Fetch data when component mounts
   useEffect(() => {
     fetchWeatherData();
     
-    // Optional: Set interval untuk update data secara berkala
-    const interval = setInterval(fetchWeatherData, 300000); // Update setiap 5 menit
+    // Optional: Set interval to update data periodically
+    const interval = setInterval(fetchWeatherData, 300000); // Update every 5 minutes
     
-    // Cleanup interval saat component unmount
+    // Clean up interval when component unmounts
     return () => clearInterval(interval);
   }, []);
 
-  // Function untuk render temperature
+  // Function to render temperature
   const renderTemperature = (temp: number | null, loading: boolean): React.ReactNode => {
     if (loading) {
       return <ActivityIndicator size="small" color="#666" />;
@@ -107,27 +105,27 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.locationTitle}>現在地</Text>
+        <Text style={styles.locationTitle}>Current Location</Text>
       </View>
 
       {/* Weather Info */}
       <View style={styles.weatherContainer}>
         <View style={styles.temperatureRow}>
           <View style={styles.tempItem}>
-            <Text style={styles.tempLabel}>外の気温</Text>
+            <Text style={styles.tempLabel}>Outside Temperature</Text>
             <Text style={styles.tempValue}>
               {renderTemperature(weatherData.outsideTemp, weatherData.loading)}
             </Text>
           </View>
           <View style={styles.tempItem}>
-            <Text style={styles.tempLabel}>室温</Text>
+            <Text style={styles.tempLabel}>Room Temperature</Text>
             <Text style={styles.tempValue}>
               {renderTemperature(weatherData.roomTemp, weatherData.loading)}
             </Text>
           </View>
         </View>
         
-        {/* Error message jika ada error */}
+        {/* Error message if there's an error */}
         {weatherData.error && (
           <TouchableOpacity 
             style={styles.errorContainer}
@@ -143,16 +141,16 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Character Illustration */}
       <View style={styles.illustrationContainer}>
-        {/* Tempat untuk gambar kelinci dengan payung */}
+        {/* Placeholder for rabbit with umbrella image */}
         <View style={styles.characterPlaceholder}>
-          {/* Ganti dengan Image component untuk gambar kamu */}
+          {/* Replace with Image component for your image */}
           {/* <Image 
             source={require('./assets/rabbit-umbrella.png')} 
             style={styles.characterImage}
             resizeMode="contain"
           /> */}
           <Text style={styles.placeholderText}>
-            Tempat untuk gambar{'\n'}kelinci dengan payung
+            Placeholder for{'\n'}rabbit with umbrella image
           </Text>
         </View>
       </View>
@@ -166,41 +164,41 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       </TouchableOpacity>
 
       {/* Bottom Navigation */}
-            <View style={styles.bottomNav}>
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Second')}
-              >
-                <Ionicons name="time-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Fourth')}
-              >
-                <Ionicons name="stats-chart-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Home')}
-              >
-                <Ionicons name="home" size={24} color="#007AFF" />
-              </TouchableOpacity>
-            
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Third')}
-              >
-                <Ionicons name="create-outline" size={24} color="#666" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('')} 
-              >
-                <Ionicons name="person-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity 
+          style={styles.navItem}
+          // onPress={() => navigation.navigate('Second')}
+        >
+          <Ionicons name="time-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      
+        <TouchableOpacity 
+          style={styles.navItem}
+          // onPress={() => navigation.navigate('Fourth')}
+        >
+          <Ionicons name="stats-chart-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      
+        <TouchableOpacity 
+          style={styles.navItem}
+          // onPress={() => navigation.navigate('Home')}
+        >
+          <Ionicons name="home" size={24} color="#007AFF" />
+        </TouchableOpacity>
+      
+        <TouchableOpacity 
+          style={styles.navItem}
+          // onPress={() => navigation.navigate('Third')}
+        >
+          <Ionicons name="create-outline" size={24} color="#666" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.navItem}
+          // onPress={() => navigation.navigate('')} 
+        >
+          <Ionicons name="person-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
 
     </SafeAreaView>
   );
