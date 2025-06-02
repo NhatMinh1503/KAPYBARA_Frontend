@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 type RootStackParamList = {
   HomeScreen: undefined;
   VirtualPetLogin: undefined;
+  ReminderScreen: undefined;
 };
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
@@ -167,7 +168,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.bottomNav}>
         <TouchableOpacity 
           style={styles.navItem}
-          // onPress={() => navigation.navigate('Second')}
+          onPress={() => navigation.navigate('ReminderScreen')}
         >
           <Ionicons name="time-outline" size={24} color="#666" />
         </TouchableOpacity>

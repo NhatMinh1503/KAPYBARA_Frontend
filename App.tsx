@@ -9,6 +9,7 @@ import VitualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
 import HomeScreen from './screens/HomeScreen';
+import ReminderScreen from './screens/ReminderScreen';
 
 // Định nghĩa kiểu param list cho stack navigator
 export type RootStackParamList = {
@@ -17,6 +18,7 @@ export type RootStackParamList = {
   RegisterScreen: undefined;
   ChoosePetScreen: undefined;
   HomeScreen: undefined;
+  ReminderScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -50,6 +52,11 @@ export default function App() {
             name="HomeScreen"
             component={HomeScreen}
             options={{ title: 'ホーム画面' }}
+          />
+          <Stack.Screen
+            name="ReminderScreen"
+            component={ReminderScreen}
+            options={{ title: 'リマインダー' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
