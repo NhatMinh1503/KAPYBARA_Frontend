@@ -25,7 +25,14 @@ type Register2ScreenNavigationProp = NativeStackNavigationProp<
 export default function Register2() {
   const navigation = useNavigation<Register2ScreenNavigationProp>();
 
-  const [goal, setGoal] = useState('null');
+  const [goal, setGoal] = useState('');
+  const [healthStatus, setHealthStatus] = useState('');
+
+  const healthOptions = [
+    { label: '元気', image: require('../assets/rabbit.png') },
+    { label: '疲れ', image: require('../assets/rabbit.png') },
+    { label: '病気', image: require('../assets/rabbit.png') },
+  ];
 
   return (
     <View style={styles.container}>
@@ -64,16 +71,12 @@ export default function Register2() {
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={goal}
-          onValueChange={(itemValue) => {
-            if (itemValue !== 'snull') {
-              setGoal(itemValue);
-            }
-          }}
+          onValueChange={(itemValue) => setGoal(itemValue)}
           style={styles.picker}
           dropdownIconColor="#000"
           mode="dropdown"
         >
-          <Picker.Item label="▼ 選択してください" value="null" color="#999" />
+          <Picker.Item label="▼ 選択してください" value="" color="#999" />
           <Picker.Item label="体重を落としたい" value="体重を落としたい" />
           <Picker.Item label="筋肉をつけたい" value="筋肉をつけたい" />
           <Picker.Item label="健康維持したい" value="健康維持したい" />
@@ -109,11 +112,18 @@ export default function Register2() {
       {/* 健康状態 */}
       <Text style={[styles.label, { marginTop: 20 }]}>今の健康状態</Text>
       <View style={styles.healthRow}>
-        {['元気', '疲れ', '病気'].map((label, index) => (
-          <View key={index} style={styles.healthItem}>
-            <Image source={require('../assets/rabbit.png')} style={styles.icon} />
-            <Text style={styles.healthLabel}>{label}</Text>
-          </View>
+        {healthOptions.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.healthItem,
+              healthStatus === option.label && styles.selectedHealth,
+            ]}
+            onPress={() => setHealthStatus(option.label)}
+          >
+            <Image source={option.image} style={styles.icon} />
+            <Text style={styles.healthLabel}>{option.label}</Text>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -121,7 +131,7 @@ export default function Register2() {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          if (goal === 'placeholder') {
+          if (!goal) {
             alert('目標を選択してください');
             return;
           }
@@ -193,7 +203,7 @@ const styles = StyleSheet.create({
   },
   picker: {
     marginBottom:35,
-    height: Platform.OS === 'ios' ? 180 : 48, 
+    height: Platform.OS === 'ios' ? 180 : 48,
     width: '100%',
   },
   healthRow: {
@@ -203,6 +213,13 @@ const styles = StyleSheet.create({
   },
   healthItem: {
     alignItems: 'center',
+    padding: 6,
+  },
+  selectedHealth: {
+    borderColor: '#CFC6FF',
+    borderWidth: 2,
+    borderRadius: 12,
+    backgroundColor: '#E8E0FF',
   },
   healthLabel: {
     marginTop: 4,

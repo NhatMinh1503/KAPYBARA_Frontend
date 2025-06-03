@@ -77,7 +77,8 @@ export default function RegisterScreen({ navigation }: Props) {
         </View>
         <View style={styles.half}>
           <Text style={styles.label}>性別</Text>
-          <Picker
+          <View style= {{overflow: 'hidden'}}>
+              <Picker
             selectedValue={gender}
             onValueChange={(itemValue) => setGender(itemValue)}
             style={styles.picker}
@@ -86,6 +87,8 @@ export default function RegisterScreen({ navigation }: Props) {
             <Picker.Item label="男" value="男" />
             <Picker.Item label="その他" value="その他" />
           </Picker>
+          </View>
+          
         </View>
       </View>
 
@@ -172,6 +175,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 48,
     justifyContent: 'center',
+
     
   },
   button: {

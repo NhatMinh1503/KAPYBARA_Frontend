@@ -9,6 +9,7 @@ import VitualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
 import NextRegisterScreen from './screens/NextRegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
+import LastRegisterScreen from './screens/LastRegisterScreen';
 import HomeScreen from './screens/HomeScreen';
 import ReminderScreen from './screens/ReminderScreen';
 
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
+  LastRegisterScreen:undefined;
   HomeScreen: undefined;
   ReminderScreen: undefined;
 };
@@ -53,6 +55,11 @@ export default function App() {
             name="ChoosePetScreen"
             component={ChoosePetScreen}
             options={{ title: 'ペット選択' }}
+          />
+          <Stack.Screen
+            name="LastRegisterScreen"
+            component={LastRegisterScreen}
+            options={{ title: 'ユーザー登録' }}
           />
           <Stack.Screen
             name="HomeScreen"
