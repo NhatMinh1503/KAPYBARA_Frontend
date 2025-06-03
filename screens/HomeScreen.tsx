@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use} from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,17 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Type definitions
 type RootStackParamList = {
   HomeScreen: undefined;
   VirtualPetLogin: undefined;
-  ReminderScreen: undefined;
 };
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
@@ -28,77 +29,93 @@ interface Props {
   navigation: HomeScreenNavigationProp;
 }
 
+
 interface WeatherData {
-  outsideTemp: number | null;
-  roomTemp: number | null;
+  temperature: number | null;
+  humidity: number | null;
+  message: string | null;
   loading: boolean;
   error: string | null;
 }
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [weatherData, setWeatherData] = useState<WeatherData>({
-    outsideTemp: null,
-    roomTemp: null,
+    temperature: null,
+    humidity: null,
+    message: null,
     loading: true,
     error: null,
   });
 
   // Function to fetch data from API
-  const fetchWeatherData = async (): Promise<void> => {
-    try {
-      setWeatherData(prev => ({ ...prev, loading: true, error: null }));
+    const fetchWeatherData = async () => {
+      try{
+        const token = await AsyncStorage.getItem('token');
+        if (!token) throw new Error('Token not found');
 
-      const cityName = 'Tokyo'; // Change to your location
-      const apiKey = 'https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=ja'; // Replace with your API key
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&units=metric&lang=ja`
-      );
+          const response = await fetch('http://localhost:3000/fetch_weather', {
+            method: 'GET',   
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch weather data');
+          if (!response.ok) {
+            throw new Error('Failed to fetch weather data');
+          }
+
+          const result = await response.json();
+          setWeatherData({
+            temperature: result.data.temperature,
+            humidity: result.data.humidity,
+            message: result.message,
+            loading: false,
+            error: '',
+          });
+      } catch (err: any) {
+        setWeatherData({
+          temperature: null,
+          humidity: null,
+          message: '',
+          loading: true,
+          error: err.message || 'An error occurred',
+        });
       }
+    };
 
-      const data = await response.json();
-      console.log('Fetched weather data:', data);
+    useEffect(() => {
+        // Fetch weather data on component mount
+        fetchWeatherData();
 
-      setWeatherData({
-        outsideTemp: data.main?.temp ?? null,
-        roomTemp: null, // OpenWeatherMap does not have room temperature data
-        loading: false,
-        error: null,
-      });
-    } catch (err) {
-      console.error('Error fetching weather data:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setWeatherData(prev => ({
-        ...prev,
-        loading: false,
-        error: errorMessage,
-      }));
-    }
-  };
-
-  // Fetch data when component mounts
-  useEffect(() => {
-    fetchWeatherData();
-    
-    // Optional: Set interval to update data periodically
-    const interval = setInterval(fetchWeatherData, 300000); // Update every 5 minutes
-    
-    // Clean up interval when component unmounts
-    return () => clearInterval(interval);
+        // Set an interval to refresh the data periodically
+        const interval = setInterval(() => {
+          fetchWeatherData();
+        }, 900000); // Refresh every 15 minutes
   }, []);
 
-  // Function to render temperature
-  const renderTemperature = (temp: number | null, loading: boolean): React.ReactNode => {
-    if (loading) {
-      return <ActivityIndicator size="small" color="#666" />;
-    }
-    if (temp !== null) {
-      return `${temp}°C`;
-    }
-    return '--°C';
-  };
+       // Function to render temperature
+      const renderTemperature = (temp: number | null, loading: boolean): React.ReactNode => {
+        if (loading) {
+          return <ActivityIndicator size="small" color="#666" />;
+        }
+        if (temp !== null) {
+          return <Text>{temp}°C</Text>;
+        }
+        return <Text>--°C</Text>;
+      };
+
+      // Function to render humidity
+      const renderHumidity = (humid: number | null, loading: boolean): React.ReactNode => {
+        if (loading) {
+          return <ActivityIndicator size="small" color="#666" />;
+        }
+        if (humid !== null) {
+          return <Text>{humid}%</Text>;
+        }
+        return <Text>--°C</Text>;
+      };
+
 
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: 80 }]}>
@@ -106,31 +123,31 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.locationTitle}>Current Location</Text>
+        <Text style={styles.locationTitle}>現在地</Text>
       </View>
 
       {/* Weather Info */}
       <View style={styles.weatherContainer}>
         <View style={styles.temperatureRow}>
           <View style={styles.tempItem}>
-            <Text style={styles.tempLabel}>Outside Temperature</Text>
+            <Text style={styles.tempLabel}>気温</Text>
             <Text style={styles.tempValue}>
-              {renderTemperature(weatherData.outsideTemp, weatherData.loading)}
+              {renderTemperature(weatherData.temperature, weatherData.loading)}
             </Text>
           </View>
           <View style={styles.tempItem}>
-            <Text style={styles.tempLabel}>Room Temperature</Text>
+            <Text style={styles.tempLabel}>湿度</Text>
             <Text style={styles.tempValue}>
-              {renderTemperature(weatherData.roomTemp, weatherData.loading)}
+              {renderHumidity(weatherData.humidity, weatherData.loading)}
             </Text>
           </View>
         </View>
         
-        {/* Error message if there's an error */}
+        {/* Error message jika ada error */}
         {weatherData.error && (
           <TouchableOpacity 
             style={styles.errorContainer}
-            onPress={fetchWeatherData}
+            onPress={fetchWeatherData} // Retry on press
           >
             <Text style={styles.errorText}>
               Error: {weatherData.error}
@@ -142,16 +159,16 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Character Illustration */}
       <View style={styles.illustrationContainer}>
-        {/* Placeholder for rabbit with umbrella image */}
+        {/* Tempat untuk gambar kelinci dengan payung */}
         <View style={styles.characterPlaceholder}>
-          {/* Replace with Image component for your image */}
+          {/* Ganti dengan Image component untuk gambar kamu */}
           {/* <Image 
             source={require('./assets/rabbit-umbrella.png')} 
             style={styles.characterImage}
             resizeMode="contain"
           /> */}
           <Text style={styles.placeholderText}>
-            Placeholder for{'\n'}rabbit with umbrella image
+            Tempat untuk gambar{'\n'}kelinci dengan payung
           </Text>
         </View>
       </View>
@@ -161,45 +178,45 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.messageButton}
         // onPress={() => navigation.navigate('')}
       >
-        <Text style={styles.messageText}>message</Text>
+        <Text style={styles.messageText}>{weatherData.message}</Text>
       </TouchableOpacity>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('ReminderScreen')}
-        >
-          <Ionicons name="time-outline" size={24} color="#666" />
-        </TouchableOpacity>
-      
-        <TouchableOpacity 
-          style={styles.navItem}
-          // onPress={() => navigation.navigate('Fourth')}
-        >
-          <Ionicons name="stats-chart-outline" size={24} color="#666" />
-        </TouchableOpacity>
-      
-        <TouchableOpacity 
-          style={styles.navItem}
-          // onPress={() => navigation.navigate('Home')}
-        >
-          <Ionicons name="home" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      
-        <TouchableOpacity 
-          style={styles.navItem}
-          // onPress={() => navigation.navigate('Third')}
-        >
-          <Ionicons name="create-outline" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          // onPress={() => navigation.navigate('')} 
-        >
-          <Ionicons name="person-outline" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
+            <View style={styles.bottomNav}>
+              <TouchableOpacity 
+                style={styles.navItem}
+                // onPress={() => navigation.navigate('Second')}
+              >
+                <Ionicons name="time-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            
+              <TouchableOpacity 
+                style={styles.navItem}
+                // onPress={() => navigation.navigate('Fourth')}
+              >
+                <Ionicons name="stats-chart-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            
+              <TouchableOpacity 
+                style={styles.navItem}
+                // onPress={() => navigation.navigate('Home')}
+              >
+                <Ionicons name="home" size={24} color="#007AFF" />
+              </TouchableOpacity>
+            
+              <TouchableOpacity 
+                style={styles.navItem}
+                // onPress={() => navigation.navigate('Third')}
+              >
+                <Ionicons name="create-outline" size={24} color="#666" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.navItem}
+                // onPress={() => navigation.navigate('')} 
+              >
+                <Ionicons name="person-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
 
     </SafeAreaView>
   );
