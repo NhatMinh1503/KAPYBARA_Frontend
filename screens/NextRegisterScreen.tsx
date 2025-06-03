@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  Alert,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useUserRegister } from '../contexts/UserRegisterContext';
 
 type RootStackParamList = {
   Register2: undefined;
@@ -24,9 +26,45 @@ type Register2ScreenNavigationProp = NativeStackNavigationProp<
 
 export default function Register2() {
   const navigation = useNavigation<Register2ScreenNavigationProp>();
+  const { userData, setUserData } = useUserRegister();
 
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [goal, setGoal] = useState('null');
+  const [health, setHealth] = useState('元気');
+  const [steps, setSteps] = useState('');
+  const [goalWeight, setGoalWeight] = useState('');
+  
+  const handleRegister = async () => {
+    const fullData = {
+      ...userData,
+      weight: parseInt(weight) || 0,
+      height: parseInt(height) || 0,
+      goal,
+      health,
+      steps: steps === '' ? 0 : parseInt(steps),
+      goalWeight: goalWeight === '' ? 0 : parseInt(goalWeight),
+    };
 
+    console.log("Sending userData:", fullData);
+
+    try {
+      const response = await fetch('http://localhost:3000/users', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify(fullData),
+      });
+
+      if (!response.ok) {
+        throw new Error('登録に失敗しました');
+      }
+
+      Alert.alert('登録完了', 'ユーザー情報が正常に登録されました。');
+      navigation.navigate('ChoosePetScreen');
+  } catch (error) {
+      console.error('Error during registration:', error); 
+  }
+};
   return (
     <View style={styles.container}>
       <Text style={styles.title}>もう少しおしえてね！</Text>
@@ -41,6 +79,8 @@ export default function Register2() {
               placeholder=""
               placeholderTextColor="#000"
               keyboardType="numeric"
+              value={height}
+              onChangeText={setHeight}
             />
             <Text style={styles.unitInside}>cm</Text>
           </View>
@@ -53,6 +93,8 @@ export default function Register2() {
               placeholder=""
               placeholderTextColor="#000"
               keyboardType="numeric"
+              value={weight}
+              onChangeText={setWeight}
             />
             <Text style={styles.unitInside}>kg</Text>
           </View>
@@ -65,7 +107,7 @@ export default function Register2() {
         <Picker
           selectedValue={goal}
           onValueChange={(itemValue) => {
-            if (itemValue !== 'snull') {
+            if (itemValue !== 'null') {
               setGoal(itemValue);
             }
           }}
@@ -83,23 +125,29 @@ export default function Register2() {
       {/* 目標歩数・kg数 */}
       <View style={styles.row}>
         <View style={styles.half}>
+          <Text style={styles.label}>目標歩数</Text>
           <View style={styles.inputWithUnit}>
             <TextInput
               style={styles.inputInner}
               placeholder=""
               placeholderTextColor="#000"
               keyboardType="numeric"
+              value={steps}
+              onChangeText={setSteps}
             />
-            <Text style={styles.unitInside}>歩</Text>
+            <Text style={styles.unitInside}>cm</Text>
           </View>
         </View>
         <View style={styles.half}>
+          <Text style={styles.label}>目標体重</Text>
           <View style={styles.inputWithUnit}>
             <TextInput
               style={styles.inputInner}
               placeholder=""
               placeholderTextColor="#000"
               keyboardType="numeric"
+              value={goalWeight}
+              onChangeText={setGoalWeight}
             />
             <Text style={styles.unitInside}>kg</Text>
           </View>
@@ -112,7 +160,10 @@ export default function Register2() {
         {['元気', '疲れ', '病気'].map((label, index) => (
           <View key={index} style={styles.healthItem}>
             <Image source={require('../assets/rabbit.png')} style={styles.icon} />
-            <Text style={styles.healthLabel}>{label}</Text>
+            <Text 
+            style={styles.healthLabel}
+            onPress={() => setHealth(label)}
+            >{label}</Text>
           </View>
         ))}
       </View>
@@ -125,7 +176,7 @@ export default function Register2() {
             alert('目標を選択してください');
             return;
           }
-          navigation.navigate('ChoosePetScreen');
+          handleRegister();
         }}
       >
         <Text style={styles.buttonText}>登録</Text>
@@ -133,6 +184,7 @@ export default function Register2() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

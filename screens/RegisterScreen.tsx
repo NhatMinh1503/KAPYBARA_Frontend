@@ -3,99 +3,119 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-nativ
 import { Picker } from '@react-native-picker/picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../App'; // Hoặc đường dẫn đến file types của bạn
+import { UserRegisterProvider, useUserRegister } from '../contexts/UserRegisterContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NextRegisterScreen'>;
 };
 
 export default function RegisterScreen({ navigation }: Props) {
+  const { setUserData } = useUserRegister();
+
   const [name, setName] = useState('');
   const [emailName, setEmailName] = useState('');
   const [emailDomain, setEmailDomain] = useState('gmail.com');
   const [password, setPassword] = useState('');
   const [age, setAge] = useState('');
-  const [gender, setGender] = useState('女');
+  const [gender, setGender] = useState('女性');
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
+  const handleNext = () => {
+    setUserData({
+      user_name: name,
+      email: `${emailName}@${emailDomain}`,
+      password,
+      age: parseInt(age),
+      gender,
+    });
+
+    navigation.navigate('NextRegisterScreen');
+  };
+
+  
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>バーチャルペット にようこそ！</Text>
+    <UserRegisterProvider>
+      <View style={styles.container}>
+        <Text style={styles.title}>バーチャルペット にようこそ！</Text>
 
-      {/* 名前 */}
-      <Text style={styles.label}>名前</Text>
-      <TextInput
-        style={[styles.input, focusedField === 'name' && styles.inputFocused]}
-        placeholder="ヘルス タロウ"
-        value={name}
-        onChangeText={setName}
-        onFocus={() => setFocusedField('name')}
-        onBlur={() => setFocusedField(null)}
-      />
-
-      {/* メールアドレス */}
-      <Text style={styles.label}>メールアドレス</Text>
-      <View style={styles.emailRow}>
+        {/* 名前 */}
+        <Text style={styles.label}>名前</Text>
         <TextInput
-          style={[styles.emailInput, focusedField === 'email' && styles.inputFocused]}
-          placeholder="YourEmail"
-          value={emailName}
-          onChangeText={setEmailName}
-          onFocus={() => setFocusedField('email')}
+          style={[styles.input, focusedField === 'name' && styles.inputFocused]}
+          placeholder="ヘルス タロウ"
+          value={name}
+          onChangeText={setName}
+          onFocus={() => setFocusedField('name')}
           onBlur={() => setFocusedField(null)}
         />
-        <Text style={styles.at}>@{emailDomain}</Text>
-      </View>
 
-      {/* パスワード */}
-      <Text style={styles.label}>パスワード</Text>
-      <TextInput
-        style={[styles.input, focusedField === 'password' && styles.inputFocused]}
-        placeholder="パスワード"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        onFocus={() => setFocusedField('password')}
-        onBlur={() => setFocusedField(null)}
-      />
+        {/* メールアドレス */}
+        <Text style={styles.label}>メールアドレス</Text>
+        <View style={styles.emailRow}>
+          <TextInput
+            style={[styles.emailInput, focusedField === 'email' && styles.inputFocused]}
+            placeholder="YourEmail"
+            value={emailName}
+            onChangeText={setEmailName}
+            onFocus={() => setFocusedField('email')}
+            onBlur={() => setFocusedField(null)}
+          />
+          <Text style={styles.at}>@{emailDomain}</Text>
+        </View>
 
-      {/* 年齢・性別 */}
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <Text style={styles.label}>年齢</Text>
-          <View style={styles.ageRow}>
-            <TextInput
-              style={[styles.input, focusedField === 'age' && styles.inputFocused]}
-              placeholder="28"
-              keyboardType="numeric"
-              value={age}
-              onChangeText={setAge}
-              onFocus={() => setFocusedField('age')}
-              onBlur={() => setFocusedField(null)}
-            />
-            <Text style={styles.at}>歳</Text>
+        {/* パスワード */}
+        <Text style={styles.label}>パスワード</Text>
+        <TextInput
+          style={[styles.input, focusedField === 'password' && styles.inputFocused]}
+          placeholder="パスワード"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          onFocus={() => setFocusedField('password')}
+          onBlur={() => setFocusedField(null)}
+        />
+
+        {/* 年齢・性別 */}
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Text style={styles.label}>年齢</Text>
+            <View style={styles.ageRow}>
+              <TextInput
+                style={[styles.input, focusedField === 'age' && styles.inputFocused]}
+                placeholder="28"
+                keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
+                onFocus={() => setFocusedField('age')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <Text style={styles.at}>歳</Text>
+            </View>
+          </View>
+          <View style={styles.half}>
+            <Text style={styles.label}>性別</Text>
+            <Picker
+              selectedValue={gender}
+              onValueChange={(itemValue) => setGender(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="女" value="女性"/>
+              <Picker.Item label="男" value="男性" />
+              <Picker.Item label="その他" value="その他" />
+            </Picker>
           </View>
         </View>
-        <View style={styles.half}>
-          <Text style={styles.label}>性別</Text>
-          <Picker
-            selectedValue={gender}
-            onValueChange={(itemValue) => setGender(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="女" value="女" />
-            <Picker.Item label="男" value="男" />
-            <Picker.Item label="その他" value="その他" />
-          </Picker>
-        </View>
-      </View>
 
-      {/* 次へ */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('NextRegisterScreen')}>
-        <Text style={styles.buttonText}>次へ</Text>
-      </TouchableOpacity>
-    </View>
+        {/* 次へ */}
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <Text style={styles.buttonText}>次へ</Text>
+        </TouchableOpacity>
+      </View>
+    </UserRegisterProvider>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

@@ -5,9 +5,9 @@ export default function SelectPet() {
   const [selected, setSelected] = useState<number | null>(null);
  
   const pets = [
-    { id: 0, source: require('../assets/rabbit.png') },
     { id: 1, source: require('../assets/rabbit.png') },
     { id: 2, source: require('../assets/rabbit.png') },
+    { id: 3, source: require('../assets/rabbit.png') },
   ];
  
   return (
