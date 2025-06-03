@@ -13,6 +13,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUserRegister } from '../contexts/UserRegisterContext';
+import AsyncStorage from '@react-native-async-storage/async-storage'; //Save user_id to AsyncStorage
 
 type RootStackParamList = {
   Register2: undefined;
@@ -30,7 +31,7 @@ export default function Register2() {
 
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
-  const [goal, setGoal] = useState('null');
+  const [goal, setGoal] = useState('');
   const [health, setHealth] = useState('元気');
   const [steps, setSteps] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
@@ -62,6 +63,9 @@ export default function Register2() {
       if (!response.ok) {
         throw new Error('登録に失敗しました');
       }
+
+      const data = await response.json();
+      await AsyncStorage.setItem('user_id', data.user_id); // Save user_id to AsyncStorage
 
       Alert.alert('登録完了', 'ユーザー情報が正常に登録されました。');
       navigation.navigate('ChoosePetScreen');

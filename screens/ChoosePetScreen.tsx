@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../App'; // Đảm bảo đường dẫn đúng
+import { PetRegisterProvider, usePetRegister } from '../contexts/PetRegisterContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ChoosePetScreen'>;
@@ -9,6 +10,7 @@ type Props = {
 
 export default function SelectPet({ navigation }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
+  const { petData, setPetData } = usePetRegister();
 
   const pets = [
     { id: 1, source: require('../assets/rabbit.png') },
@@ -16,7 +18,16 @@ export default function SelectPet({ navigation }: Props) {
     { id: 3, source: require('../assets/rabbit.png') },
   ];
 
+
+  const handleNext = () => {
+    setPetData({
+      pet_typeid: Number(selected) || 0,
+    });
+
+    navigation.navigate('LastRegisterScreen');
+  }
   return (
+    <PetRegisterProvider>
     <View style={styles.container}>
       <Text style={styles.title}>ペットを選びましょう</Text>
       <View style={styles.petGrid}>
@@ -35,11 +46,12 @@ export default function SelectPet({ navigation }: Props) {
       </View>
       <Text
         style={styles.buttonText}
-        onPress={() => navigation.navigate('LastRegisterScreen')}
+        onPress={handleNext}
       >
         選択
       </Text>
     </View>
+    </PetRegisterProvider>
   );
 }
 

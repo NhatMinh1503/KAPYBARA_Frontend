@@ -12,6 +12,7 @@ import ChoosePetScreen from './screens/ChoosePetScreen';
 import LastRegisterScreen from './screens/LastRegisterScreen';
 import HomeScreen from './screens/HomeScreen';
 import ReminderScreen from './screens/ReminderScreen';
+import { PetRegisterProvider } from './contexts/PetRegisterContext';
 
 export type RootStackParamList = {
   IndexLogin: undefined;
@@ -29,50 +30,52 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   return (
     <UserRegisterProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="IndexLogin">
-          <Stack.Screen
-            name="IndexLogin"
-            component={IndexLogin}
-            options={{ title: 'ようこそ' }}
-          />
-          <Stack.Screen
-            name="VitualPetLogin"
-            component={VitualPetLogin}
-            options={{ title: 'ログイン' }}
-          />
-          <Stack.Screen
-            name="RegisterScreen"
-            component={RegisterScreen}
-            options={{ title: 'ユーザー登録' }}
-          />
-          <Stack.Screen
-            name="NextRegisterScreen"
-            component={NextRegisterScreen}
-            options={{ title: 'ユーザー登録' }}
-          />
-          <Stack.Screen
-            name="ChoosePetScreen"
-            component={ChoosePetScreen}
-            options={{ title: 'ペット選択' }}
-          />
-          <Stack.Screen
-            name="LastRegisterScreen"
-            component={LastRegisterScreen}
-            options={{ title: 'ユーザー登録' }}
-          />
-          <Stack.Screen
-            name="HomeScreen"
-            component={HomeScreen}
-            options={{ title: 'ホーム画面' }}
-          />
-          <Stack.Screen
-            name="ReminderScreen"
-            component={ReminderScreen}
-            options={{ title: 'リマインダー' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <PetRegisterProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="IndexLogin">
+            <Stack.Screen
+              name="IndexLogin"
+              component={IndexLogin}
+              options={{ title: 'ようこそ' }}
+            />
+            <Stack.Screen
+              name="VitualPetLogin"
+              component={VitualPetLogin}
+              options={{ title: 'ログイン' }}
+            />
+            <Stack.Screen
+              name="RegisterScreen"
+              component={RegisterScreen}
+              options={{ title: 'ユーザー登録' }}
+            />
+            <Stack.Screen
+              name="NextRegisterScreen"
+              component={NextRegisterScreen}
+              options={{ title: 'ユーザー登録' }}
+            />
+            <Stack.Screen
+              name="ChoosePetScreen"
+              component={ChoosePetScreen}
+              options={{ title: 'ペット選択' }}
+            />
+            <Stack.Screen
+              name="LastRegisterScreen"
+              component={LastRegisterScreen}
+              options={{ title: 'ユーザー登録' }}
+            />
+            <Stack.Screen
+              name="HomeScreen"
+              component={HomeScreen}
+              options={{ title: 'ホーム画面' }}
+            />
+            <Stack.Screen
+              name="ReminderScreen"
+              component={ReminderScreen}
+              options={{ title: 'リマインダー' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PetRegisterProvider>
     </UserRegisterProvider>
   );
 }
