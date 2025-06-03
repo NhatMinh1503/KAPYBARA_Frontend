@@ -70,7 +70,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             temperature: result.data.temperature,
             humidity: result.data.humidity,
             message: result.message,
-            loading: false,
+            loading: true,
             error: '',
           });
       } catch (err: any) {
@@ -78,7 +78,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           temperature: null,
           humidity: null,
           message: '',
-          loading: false,
+          loading: true,
           error: err.message || 'An error occurred',
         });
       }

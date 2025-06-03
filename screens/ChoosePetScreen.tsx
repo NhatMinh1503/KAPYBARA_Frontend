@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import {
   View,
@@ -93,143 +94,71 @@ export default function RegisterScreen({navigation}:Props) {
         }
     }
   };
+=======
+>>>>>>> 96a10d4514d11388336a1f0b6cdbe1a71e99ac2d
 
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+ 
+export default function SelectPet() {
+  const [selected, setSelected] = useState<number | null>(null);
+ 
+  const pets = [
+    { id: 0, source: require('../assets/rabbit.png') },
+    { id: 1, source: require('../assets/rabbit.png') },
+    { id: 2, source: require('../assets/rabbit.png') },
+  ];
+ 
   return (
-    <View style= {{flex:1}}>
-
-    
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.form}>
-        <Text style={styles.title}>もう少し教えてね！</Text>
-
-        {/* <Text style={styles.label}>名前</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="ヘルスくん"
-          value={form.name}
-          onChangeText={(text) => handleChange('name', text)}
-        />
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>年齢</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.age}
-                onChangeText={(text) => handleChange('age', text)}
-              />
-              <Text style={styles.inlineText}>歳</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>性別</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={form.gender}
-                onValueChange={(value) => handleChange('gender', value as Gender)}
-              >
-                <Picker.Item label="女" value="女" />
-                <Picker.Item label="男" value="男" />
-              </Picker>
-            </View>
-          </View>
-        </View> */}
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>身長</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.height}
-                onChangeText={(text) => handleChange('height', text)}
-              />
-              <Text style={styles.inlineText}>cm</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>今の体重</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.weight}
-                onChangeText={(text) => handleChange('weight', text)}
-              />
-              <Text style={styles.inlineText}>kg</Text>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.label}>目標</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={form.goal}
-            onValueChange={(value) => handleChange('goal', value as Goal)}
+    <View style={styles.container}>
+      <Text style={styles.title}>ペットを選びましょう</Text>
+      <View style={styles.petGrid}>
+        {pets.map((pet) => (
+          <TouchableOpacity
+            key={pet.id}
+            onPress={() => setSelected(pet.id)}
+            style={[
+              styles.petWrapper,
+              selected === pet.id && styles.selectedPet,
+            ]}
           >
-            <Picker.Item label="体重を落としたい" value="体重を落としたい" />
-            <Picker.Item label="体重を増やしたい" value="体重を増やしたい" />
-          </Picker>
-        </View>
-
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>目標歩数</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.steps}
-                onChangeText={(text) => handleChange('steps', text)}
-              />
-              <Text style={styles.inlineText}>歩</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>目標体重</Text>
-            <View style={styles.inlineInput}>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={form.goalWeight}
-                onChangeText={(text) => handleChange('goalWeight', text)}
-              />
-              <Text style={styles.inlineText}>kg</Text>
-            </View>
-          </View>
-        </View>
-
-        <Text style={styles.label}>今の健康状態</Text>
-        <View style={styles.healthOptions}>
-          {(['元気', '疲れ', '病気'] as HealthStatus[]).map((status) => (
-            <TouchableOpacity
-              key={status}
-              style={styles.healthIcon}
-              onPress={() => handleHealthSelect(status)}
-            >
-              <Image
-                source={{ uri: `https://placehold.co/60x60?text=${status}` }}
-                style={[
-                  styles.healthImage,
-                  // form.health === status && styles.healthImageSelected
-                ]}
-              />
-              <Text>{status}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>登録</Text>
-        </TouchableOpacity>
+            <Image source={pet.source} style={styles.petImage} />
+          </TouchableOpacity>
+        ))}
       </View>
-    </ScrollView>
     </View>
   );
 }
+ 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F7F3FF',
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 40,
+  },
+  petGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 32,
+    rowGap: 32,
+  },
+  petWrapper: {
+    padding: 8,
+    borderRadius: 16,
+  },
+  selectedPet: {
+    backgroundColor: '#D9D4FF',
+  },
+  petImage: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
+  },
+});

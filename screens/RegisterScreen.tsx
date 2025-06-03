@@ -1,35 +1,26 @@
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useState } from 'react';
-import { useUserRegister } from '../contexts/UserRegisterContext';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../App';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../App'; // Hoặc đường dẫn đến file types của bạn
 
-type RegisterScreenProp = NativeStackNavigationProp<RootStackParamList, 'RegisterScreen'>;
- 
-export default function RegisterScreen() {
-  const navigation = useNavigation<RegisterScreenProp>();
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'NextRegisterScreen'>;
+};
+
+export default function RegisterScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [emailName, setEmailName] = useState('');
   const [emailDomain, setEmailDomain] = useState('gmail.com');
-  const email = `${emailName}`;
   const [password, setPassword] = useState('');
   const [age, setAge] = useState('');
-  const [gender, setGender] = useState('女性');
+  const [gender, setGender] = useState('女');
   const [focusedField, setFocusedField] = useState<string | null>(null);
-
-  const { setUserData } = useUserRegister();
-
-  const handleNext = () => {
-    setUserData({ user_name: name, email , password, age: parseInt(age), gender});
-    navigation.navigate('ChoosePetScreen');
-  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>バーチャルペット にようこそ！</Text>
- 
+
       {/* 名前 */}
       <Text style={styles.label}>名前</Text>
       <TextInput
@@ -40,20 +31,21 @@ export default function RegisterScreen() {
         onFocus={() => setFocusedField('name')}
         onBlur={() => setFocusedField(null)}
       />
- 
+
       {/* メールアドレス */}
       <Text style={styles.label}>メールアドレス</Text>
       <View style={styles.emailRow}>
         <TextInput
           style={[styles.emailInput, focusedField === 'email' && styles.inputFocused]}
-          placeholder="youremail@gamil.com"
+          placeholder="YourEmail"
           value={emailName}
           onChangeText={setEmailName}
           onFocus={() => setFocusedField('email')}
           onBlur={() => setFocusedField(null)}
         />
+        <Text style={styles.at}>@{emailDomain}</Text>
       </View>
- 
+
       {/* パスワード */}
       <Text style={styles.label}>パスワード</Text>
       <TextInput
@@ -65,7 +57,7 @@ export default function RegisterScreen() {
         onFocus={() => setFocusedField('password')}
         onBlur={() => setFocusedField(null)}
       />
- 
+
       {/* 年齢・性別 */}
       <View style={styles.row}>
         <View style={styles.half}>
@@ -90,22 +82,21 @@ export default function RegisterScreen() {
             onValueChange={(itemValue) => setGender(itemValue)}
             style={styles.picker}
           >
-            <Picker.Item label="女" value="女性" />
-            <Picker.Item label="男" value="男性" />
+            <Picker.Item label="女" value="女" />
+            <Picker.Item label="男" value="男" />
             <Picker.Item label="その他" value="その他" />
           </Picker>
         </View>
       </View>
- 
+
       {/* 次へ */}
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('NextRegisterScreen')}>
         <Text style={styles.buttonText}>次へ</Text>
       </TouchableOpacity>
     </View>
   );
 }
- 
-// ↓↓↓ ここが内部 StyleSheet ↓↓↓
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -172,7 +163,7 @@ const styles = StyleSheet.create({
   ageRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    width:'50%',
+    width: '100%',
   },
   picker: {
     backgroundColor: '#fff',
@@ -181,6 +172,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 48,
     justifyContent: 'center',
+    
   },
   button: {
     backgroundColor: '#7A6FFF',
