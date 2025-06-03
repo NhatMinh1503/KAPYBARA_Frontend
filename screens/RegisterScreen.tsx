@@ -32,8 +32,6 @@ export default function RegisterScreen({ navigation }: Props) {
     navigation.navigate('NextRegisterScreen');
   };
 
-  
-
   return (
     <UserRegisterProvider>
       <View style={styles.container}>
@@ -106,7 +104,6 @@ export default function RegisterScreen({ navigation }: Props) {
             </Picker>
           </View>
         </View>
-
         {/* 次へ */}
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>次へ</Text>
@@ -192,6 +189,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 48,
     justifyContent: 'center',
+
     
   },
   button: {
