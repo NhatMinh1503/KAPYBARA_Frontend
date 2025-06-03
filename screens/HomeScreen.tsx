@@ -70,7 +70,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             temperature: result.data.temperature,
             humidity: result.data.humidity,
             message: result.message,
-            loading: true,
+            loading: false,
             error: '',
           });
       } catch (err: any) {
@@ -105,6 +105,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         return <Text>--°C</Text>;
       };
 
+      // Function to render humidity
+      const renderHumidity = (humid: number | null, loading: boolean): React.ReactNode => {
+        if (loading) {
+          return <ActivityIndicator size="small" color="#666" />;
+        }
+        if (humid !== null) {
+          return <Text>{humid}%</Text>;
+        }
+        return <Text>--°C</Text>;
+      };
+
 
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: 80 }]}>
@@ -127,7 +138,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.tempItem}>
             <Text style={styles.tempLabel}>湿度</Text>
             <Text style={styles.tempValue}>
-              {renderTemperature(weatherData.humidity, weatherData.loading)}
+              {renderHumidity(weatherData.humidity, weatherData.loading)}
             </Text>
           </View>
         </View>
