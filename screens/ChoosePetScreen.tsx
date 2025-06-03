@@ -73,7 +73,7 @@ export default function RegisterScreen({navigation}:Props) {
     };
 
     try{
-      const response = await fetch('http://localhost:3000/users', {
+      const response = await fetch('http://localhost:3000/fetch_weather', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(finalData),
