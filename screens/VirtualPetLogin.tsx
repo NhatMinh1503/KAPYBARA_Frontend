@@ -26,7 +26,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     try{
-          const response = await fetch('http://localhost:3000/login', {
+          const response = await fetch('http://10.108.1.108:3000/login', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(finalData),
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '600',
-    color: '#4B3EFF',
+    color: '#8B7CF6',
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   loginButton: {
-    backgroundColor: '#7A6FFF',
+    backgroundColor: '#8B7CF6',
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',

@@ -13,23 +13,32 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+ 
 // Type definitions
 type RootStackParamList = {
+  IndexLogin: undefined;
+  VitualPetLogin: undefined;
+  RegisterScreen: undefined;
+  NextRegisterScreen: undefined;
+  ChoosePetScreen: undefined;
+  LastRegisterScreen:undefined;
   HomeScreen: undefined;
-  VirtualPetLogin: undefined;
+  ReminderScreen: undefined;
+  ProgressTrackerScreen: undefined;
+  DailyHealthScreen: undefined;
+  UserProfileScreen: undefined;
 };
-
+ 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'HomeScreen'
 >;
-
+ 
 interface Props {
   navigation: HomeScreenNavigationProp;
 }
-
-
+ 
+ 
 interface WeatherData {
   temperature: number | null;
   humidity: number | null;
@@ -37,7 +46,7 @@ interface WeatherData {
   loading: boolean;
   error: string | null;
 }
-
+ 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [weatherData, setWeatherData] = useState<WeatherData>({
     temperature: null,
@@ -46,25 +55,25 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     loading: true,
     error: null,
   });
-
+ 
   // Function to fetch data from API
     const fetchWeatherData = async () => {
       try{
         const token = await AsyncStorage.getItem('token');
         if (!token) throw new Error('Token not found');
-
-          const response = await fetch('http://localhost:3000/fetch_weather', {
-            method: 'GET',   
+ 
+          const response = await fetch('http://10.108.1.108:3000/fetch_weather', {
+            method: 'GET',  
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             }
           });
-
+ 
           if (!response.ok) {
             throw new Error('Failed to fetch weather data');
           }
-
+ 
           const result = await response.json();
           setWeatherData({
             temperature: result.data.temperature,
@@ -83,17 +92,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         });
       }
     };
-
+ 
     useEffect(() => {
         // Fetch weather data on component mount
         fetchWeatherData();
-
+ 
         // Set an interval to refresh the data periodically
         const interval = setInterval(() => {
           fetchWeatherData();
         }, 900000); // Refresh every 15 minutes
   }, []);
-
+ 
        // Function to render temperature
       const renderTemperature = (temp: number | null, loading: boolean): React.ReactNode => {
         if (loading) {
@@ -104,7 +113,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }
         return <Text>--°C</Text>;
       };
-
+ 
       // Function to render humidity
       const renderHumidity = (humid: number | null, loading: boolean): React.ReactNode => {
         if (loading) {
@@ -115,17 +124,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }
         return <Text>--°C</Text>;
       };
-
-
+ 
+ 
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: 80 }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
-      
+     
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.locationTitle}>現在地</Text>
       </View>
-
+ 
       {/* Weather Info */}
       <View style={styles.weatherContainer}>
         <View style={styles.temperatureRow}>
@@ -142,10 +151,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </View>
         </View>
-        
+       
         {/* Error message jika ada error */}
         {weatherData.error && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.errorContainer}
             onPress={fetchWeatherData} // Retry on press
           >
@@ -156,14 +165,14 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         )}
       </View>
-
+ 
       {/* Character Illustration */}
       <View style={styles.illustrationContainer}>
         {/* Tempat untuk gambar kelinci dengan payung */}
         <View style={styles.characterPlaceholder}>
           {/* Ganti dengan Image component untuk gambar kamu */}
-          {/* <Image 
-            source={require('./assets/rabbit-umbrella.png')} 
+          {/* <Image
+            source={require('./assets/rabbit-umbrella.png')}
             style={styles.characterImage}
             resizeMode="contain"
           /> */}
@@ -172,56 +181,56 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
       </View>
-
+ 
       {/* Message Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.messageButton}
         // onPress={() => navigation.navigate('')}
       >
         <Text style={styles.messageText}>{weatherData.message}</Text>
       </TouchableOpacity>
-
+ 
       {/* Bottom Navigation */}
             <View style={styles.bottomNav}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.navItem}
-                // onPress={() => navigation.navigate('Second')}
+                onPress={() => navigation.navigate('ReminderScreen')}
               >
                 <Ionicons name="time-outline" size={24} color="#666" />
               </TouchableOpacity>
-            
-              <TouchableOpacity 
+           
+              <TouchableOpacity
                 style={styles.navItem}
-                // onPress={() => navigation.navigate('Fourth')}
+                onPress={() => navigation.navigate('ProgressTrackerScreen')}
               >
                 <Ionicons name="stats-chart-outline" size={24} color="#666" />
               </TouchableOpacity>
-            
-              <TouchableOpacity 
+           
+              <TouchableOpacity
                 style={styles.navItem}
-                // onPress={() => navigation.navigate('Home')}
+                onPress={() => navigation.navigate('HomeScreen')}
               >
-                <Ionicons name="home" size={24} color="#007AFF" />
+                <Ionicons name="home" size={24} color="#8B7CF6" />
               </TouchableOpacity>
-            
-              <TouchableOpacity 
+           
+              <TouchableOpacity
                 style={styles.navItem}
-                // onPress={() => navigation.navigate('Third')}
+                onPress={() => navigation.navigate('DailyHealthScreen')}
               >
                 <Ionicons name="create-outline" size={24} color="#666" />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.navItem}
-                // onPress={() => navigation.navigate('')} 
+                onPress={() => navigation.navigate('UserProfileScreen')}
               >
                 <Ionicons name="person-outline" size={24} color="#666" />
               </TouchableOpacity>
             </View>
-
+ 
     </SafeAreaView>
   );
 };
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -353,5 +362,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-
+ 
 export default HomeScreen;

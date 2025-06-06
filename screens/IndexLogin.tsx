@@ -11,7 +11,7 @@ export default function VitualPetLogin({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Virtual Pet</Text>
-      <Text style={styles.description}>アプリの説明</Text>
+      <Text style={styles.description}>ペットと一緒に、健康的な毎日を楽しもう！</Text>
       <Image
         source={require('../assets/rabbit.png')}
         style={styles.image}
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   button: {
-    backgroundColor: '#CFC6FF',
+    backgroundColor: '#8B7CF6',
     paddingVertical: 12,
     paddingHorizontal: 48,
     borderRadius: 20,

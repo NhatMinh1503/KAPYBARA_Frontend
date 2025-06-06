@@ -4,9 +4,17 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
+  IndexLogin: undefined;
+  VitualPetLogin: undefined;
+  RegisterScreen: undefined;
+  NextRegisterScreen: undefined;
+  ChoosePetScreen: undefined;
+  LastRegisterScreen:undefined;
   HomeScreen: undefined;
-  VirtualPetLogin: undefined;
   ReminderScreen: undefined;
+  ProgressTrackerScreen: undefined;
+  DailyHealthScreen: undefined;
+  UserProfileScreen: undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReminderScreen'>;
@@ -64,41 +72,41 @@ const SecondScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Bottom Navigation */}
-            <View style={styles.bottomNav}>
-              <TouchableOpacity 
-                style={styles.navItem}
-                 onPress={() => navigation.navigate('ReminderScreen')}
-              >
-                <Ionicons name="time-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Fourth')}
-              >
-                <Ionicons name="stats-chart-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Home')}
-              >
-                <Ionicons name="home" size={24} color="#007AFF" />
-              </TouchableOpacity>
-            
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('Third')}
-              >
-                <Ionicons name="create-outline" size={24} color="#666" />
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.navItem}
-                // onPress={() => navigation.navigate('')} 
-              >
-                <Ionicons name="person-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+                  <View style={styles.bottomNav}>
+                    <TouchableOpacity
+                      style={styles.navItem}
+                      onPress={() => navigation.navigate('ReminderScreen')}
+                    >
+                      <Ionicons name="time-outline" size={24} color="#666" />
+                    </TouchableOpacity>
+                 
+                    <TouchableOpacity
+                      style={styles.navItem}
+                      onPress={() => navigation.navigate('ProgressTrackerScreen')}
+                    >
+                      <Ionicons name="stats-chart-outline" size={24} color="#666" />
+                    </TouchableOpacity>
+                 
+                    <TouchableOpacity
+                      style={styles.navItem}
+                      onPress={() => navigation.navigate('HomeScreen')}
+                    >
+                      <Ionicons name="home" size={24} color="#8B7CF6" />
+                    </TouchableOpacity>
+                 
+                    <TouchableOpacity
+                      style={styles.navItem}
+                      onPress={() => navigation.navigate('DailyHealthScreen')}
+                    >
+                      <Ionicons name="create-outline" size={24} color="#666" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.navItem}
+                      onPress={() => navigation.navigate('UserProfileScreen')}
+                    >
+                      <Ionicons name="person-outline" size={24} color="#666" />
+                    </TouchableOpacity>
+                  </View>
     </SafeAreaView>
   );
 };
