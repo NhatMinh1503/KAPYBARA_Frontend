@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Type definitions
 type RootStackParamList = {
@@ -23,25 +25,45 @@ type RootStackParamList = {
   HomeScreen: undefined;
   ReminderScreen: undefined;
   ProgressTrackerScreen: undefined;
-  DailyHealthScreen: undefined;
+  DailyHealthScreen: {
+    mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    mealData?: MealData;
+  };
   UserProfileScreen: undefined;
-  SelectFoodScreen: undefined;
+  SelectFoodScreen: {
+    mealType: MealType;
+    onSave: (data: MealData) => void;
+  };
 };
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'SelectFoodScreen'
->;
+type SelectFoodRouteProp = RouteProp<RootStackParamList, 'SelectFoodScreen'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SelectFoodScreen'>;
 
 interface Props {
-  navigation: HomeScreenNavigationProp;
+  navigation: NavigationProp;
+  route: SelectFoodRouteProp;
 }
 
 interface FoodItem {
   id: string;
   name: string;
+  totalCalories: number;
+  protein: number;  
+  fat: number;
+  carbs: number;
   isEnabled: boolean;
 }
+
+interface MealData {
+  fat: number;
+  protein: number;
+  carbs: number;
+  totalCalories: number;
+  percentages: number;
+  foods : { name: string; calories: number}[];
+}
+
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 const CustomToggle: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ isEnabled, onToggle }) => {
   return (
@@ -52,16 +74,83 @@ const CustomToggle: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ 
 };
 
 const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
+  const route = useRoute<SelectFoodRouteProp>();
+  const mealsType = route.params.mealType;
+  const onSave = route.params.onSave;
+
+
   const [searchText, setSearchText] = useState('');
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([
-    { id: '1', name: '唐揚げ', isEnabled: true },
-    { id: '2', name: 'きれいな唐揚げ', isEnabled: true },
-    { id: '3', name: '魚の唐揚げ', isEnabled: false },
-    { id: '4', name: '鶏もも肉唐揚げ（イオン）', isEnabled: false },
-    { id: '5', name: '鶏もも肉唐揚げ（セブンイレブン）', isEnabled: false },
-    { id: '6', name: '若鶏もも肉唐揚げ（テーレイ）', isEnabled: false },
-    { id: '7', name: 'など、など', isEnabled: false },
-  ]);
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = mealsType || 'breakfast';
+
+
+  const fetchFoodData = async () => {
+    if(searchText.trim() === '') {
+      setFoodItems([]); 
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch(`http://localhost:3000/food_data?name=${searchText.trim()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Fetched food data:', data);
+
+      const nutrients = Array.isArray(data.foodNutrients) ? data.foodNutrients : [];
+
+      const getNutrientValue = (nutrientName: string) => {
+        const nutrient = nutrients.find((n: any) => n.nutrientName.toLowerCase().includes(nutrientName.toLowerCase()));
+        return nutrient ? nutrient.value : 0;
+      };
+      
+      const foodItem = {
+        id: data.fdcId,
+        name: data.description,
+        totalCalories: getNutrientValue('Energy'),
+        protein: getNutrientValue('Protein'),
+        fat: getNutrientValue('Total lipid (fat)'),
+        carbs: getNutrientValue('Carbohydrate'),
+        isEnabled: false,
+      }
+      setFoodItems([foodItem]);
+      
+    } catch (error) {
+      console.error('Fetch failed!', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      fetchFoodData();
+    }, 500);
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+   
+  }, [searchText]);
+
 
   const toggleSwitch = (id: string) => {
     setFoodItems(prev =>
@@ -69,6 +158,30 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
         item.id === id ? { ...item, isEnabled: !item.isEnabled } : item
       )
     );
+  };
+
+  const saveSelectedFoods = () => {
+    const selected = foodItems.filter(item => item.isEnabled);
+
+    const totalCalories = selected.reduce((sum, item) => sum + item.totalCalories, 0);
+    const totalProtein = selected.reduce((sum, item) => sum + item.protein, 0);
+    const totalFat = selected.reduce((sum, item) => sum + item.fat, 0);
+    const totalCarbs = selected.reduce((sum, item) => sum + item.carbs, 0);
+    
+    const mealData: MealData = {
+      fat: totalFat,
+      protein: totalProtein,
+      carbs: totalCarbs,
+      totalCalories: totalCalories,
+      percentages: 0,
+      foods: selected.map(item => ({
+      name: item.name,
+      calories: item.totalCalories,
+      })),
+    };
+
+    onSave(mealData);
+    navigation.goBack();
   };
 
   const filteredItems = foodItems.filter(item =>
@@ -87,8 +200,8 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>食品</Text>
         <TouchableOpacity style={styles.headerButton} 
-        onPress={() => navigation.navigate('ProgressTrackerScreen')}>
-          <Text style={styles.saveButton}>保存</Text>
+        onPress={() => saveSelectedFoods()}>
+          <Text style={styles.saveButton} >保存</Text>
         </TouchableOpacity>
       </View>
 
@@ -100,6 +213,7 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
           placeholder="唐揚げ"
           value={searchText}
           onChangeText={setSearchText}
+          onSubmitEditing={fetchFoodData}
           placeholderTextColor="#999"
         />
       </View>
@@ -142,7 +256,6 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
                  
                     <TouchableOpacity
                       style={styles.navItem}
-                      onPress={() => navigation.navigate('DailyHealthScreen')}
                     >
                       <Ionicons name="create-outline" size={24} color="#666" />
                     </TouchableOpacity>

@@ -26,7 +26,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     try{
-          const response = await fetch('http://10.108.1.108:3000/login', {
+          const response = await fetch('http://localhost:3000/login', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(finalData),

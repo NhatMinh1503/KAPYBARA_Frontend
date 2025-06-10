@@ -62,7 +62,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         const token = await AsyncStorage.getItem('token');
         if (!token) throw new Error('Token not found');
  
-          const response = await fetch('http://10.108.1.108:3000/fetch_weather', {
+          const response = await fetch('http://localhost:3000/fetch_weather', {
             method: 'GET',  
             headers: {
               'Authorization': `Bearer ${token}`,

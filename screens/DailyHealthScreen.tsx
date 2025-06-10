@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,  useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,23 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useIsFocused } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+
+
+// Define the meal types
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
-  VitualPetLogin: undefined;
+  VirtualPetLogin: undefined;
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
@@ -23,18 +32,23 @@ type RootStackParamList = {
   HomeScreen: undefined;
   ReminderScreen: undefined;
   ProgressTrackerScreen: undefined;
-  DailyHealthScreen: undefined;
+  DailyHealthScreen: {
+    mealType: MealType;
+    mealData: MealData;
+  };
   UserProfileScreen: undefined;
-  SelectFoodScreen: undefined;
+  SelectFoodScreen: {
+    mealType: MealType;
+    onSave: (data: MealData) => void;
+  };
 };
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'DailyHealthScreen'
->;
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'DailyHealthScreen'>;
+type DailyHealthRouteProp = RouteProp<RootStackParamList, 'DailyHealthScreen'>;
 
 interface Props {
   navigation: HomeScreenNavigationProp;
+  route: DailyHealthRouteProp;
 }
 
 interface FoodItem {
@@ -51,63 +65,229 @@ interface MealData {
   foods: FoodItem[];
 }
 
-const DailyHealthScreen: React.FC<Props> = ({ navigation }) => {
+interface WaterIntake {
+  amount: number;
+  goal: number;
+}
+
+interface StepsData {
+  steps: number;
+  goal: number;
+}
+
+const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
   const [waterIntake, setWaterIntake] = useState('');
   const [steps, setSteps] = useState('');
-  
+  const isFocused = useIsFocused();
+
   // Sample data - akan diganti dengan data dari backend
-  const [mealsData, setMealsData] = useState({
-    breakfast: {
-      fat: 11.27,
-      carbs: 3.95,
-      protein: 11.2,
-      percentage: 18,
-      totalCalories: 164,
-      foods: [
-        { name: '豚骨ラ', calories: 83 },
-        { name: 'さけいか漬物ナ', calories: 81 }
-      ]
-    } as MealData,
-    lunch: null as MealData | null,
-    dinner: null as MealData | null,
-    snack: null as MealData | null,
+   const defaultMealData = (): MealData => ({
+    fat: 0,
+    carbs: 0,
+    protein: 0,
+    percentage: 0,
+    totalCalories: 0,
+    foods: [],
   });
 
-  const mealNames = {
+  const [meals, setMeals] = useState<Record<MealType, MealData>>({
+    breakfast: defaultMealData(),
+    lunch: defaultMealData(),
+    dinner: defaultMealData(),
+    snack: defaultMealData(),
+  });
+
+    useEffect(() => {
+    if (isFocused && route.params?.mealType && route.params?.mealData) {
+      const { mealType, mealData } = route.params;
+      handleMealSave(mealType, mealData);
+
+      navigation.setParams({
+        mealType: undefined, // Clear the params after handling
+        mealData: undefined, // Clear the params after handling
+      });
+    }
+  }, [isFocused, route.params]);
+
+  const handleAddMeal = (mealType: keyof typeof meals) => {
+    navigation.navigate('SelectFoodScreen', {
+      mealType,
+      onSave: (data: MealData) => handleMealSave(mealType, data),
+    });
+  };
+
+
+  const handleMealSave = (mealType: keyof typeof meals, newdata: MealData) => {
+    setMeals((prevMeals) => {
+      const existingFoods = prevMeals[mealType].foods;
+      const updatedFoods = [...existingFoods, ...newdata.foods];
+
+      const updateFat = prevMeals[mealType].fat + newdata.fat;
+      const updateCarbs = prevMeals[mealType].carbs + newdata.carbs;
+      const updateProtein = prevMeals[mealType].protein + newdata.protein;
+      const updateTotalCalories = prevMeals[mealType].totalCalories + newdata.totalCalories;
+
+      const updatePercentage = Math.round(
+        ((updateFat + updateCarbs + updateProtein) / 100) * 100
+      );
+
+      return {
+        ...prevMeals,
+        [mealType]: {
+          fat: updateFat,
+          carbs: updateCarbs,
+          protein: updateProtein,
+          percentage: updatePercentage,
+          totalCalories: updateTotalCalories,
+          foods: updatedFoods,
+        },
+      }
+    })
+  };
+
+  const calculateTotalNutrition = () => {
+    const total = Object.values(meals).reduce(
+      (acc, meal) => {
+        acc.fat += meal.fat;
+        acc.carbs += meal.carbs;
+        acc.protein += meal.protein;
+        acc.totalCalories += meal.totalCalories;
+        return acc;
+      },
+      { fat: 0, carbs: 0, protein: 0, totalCalories: 0 }
+    );
+
+    const percentage = Math.round(
+      ((total.fat + total.carbs + total.protein) / 100) * 100
+    );
+
+    return { ...total, percentage };
+  };
+  const total = calculateTotalNutrition();
+
+  // Function to load meals to AsyncStorage
+  useEffect(() => {
+    const loadMeals = async () => {
+      try {
+        const storedData = getStorageData();
+        const storedMeals = await AsyncStorage.getItem(storedData);
+        if (storedMeals) {
+          setMeals(JSON.parse(storedMeals));
+        }
+      } catch (error) {
+        console.error('Failed to load meals from storage:', error);
+      }
+    };
+    loadMeals();
+  }, []);
+
+  const getStorageData = () => {
+    const logicalDate = getLogDate(); // cut off time 03:00
+    return `@meals:${logicalDate}`;
+  }
+
+
+  // Function to save meals to AsyncStorage
+  useEffect(() => {
+    const saveMeals = async () => {
+      try {
+        const storedData = getStorageData();
+        await AsyncStorage.setItem(storedData, JSON.stringify(meals));
+      } catch (error) {
+        console.error('Failed to save meals to storage:', error);
+      }
+    };
+    saveMeals();
+  }, [meals]);
+
+  // Function to reset stored data (daily)
+  const resetStoredData = async () => {
+    await sendCaloriesToBackend(total.totalCalories);
+    try {
+      const storedData = getStorageData();
+      await AsyncStorage.removeItem(storedData);
+      setMeals({
+        breakfast: defaultMealData(),
+        lunch: defaultMealData(),
+        dinner: defaultMealData(),
+        snack: defaultMealData(),
+      });
+      Alert.alert('データがリセットされました');
+      
+    } catch (error) {
+      console.error('Failed to reset stored data:', error);
+    }
+  };
+
+  // Function to send calories to backend
+  const sendCaloriesToBackend = async (totalCalories: number) => {
+    const storedUserId = await AsyncStorage.getItem('user_id');
+    const log_date = getLogDate();
+    try {
+      const response = await fetch('https://localhost:3000/daily-calories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ calories: totalCalories, user_id: storedUserId, log_date }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send calories to backend');
+      }
+    } catch (error) {
+      console.error('Error sending calories to backend:', error);
+    }
+  };
+
+  // Function to set time to send data to backend
+  function getLogDate() {
+    const now = new Date();
+    const hour = now.getHours();
+
+    const logicalDate = new Date(now);
+    if (hour < 3) {
+      logicalDate.setDate(now.getDate() - 1); // 前日のデータを送信
+    }
+
+    return logicalDate.toISOString().split('T')[0]; // YYYY-MM-DD形式で返す
+  };
+
+  // Function to reset all data in new day
+  const resetIfNewDay = async () => {
+    try{
+      const today = getLogDate();
+      const lastResetDate = await AsyncStorage.getItem('lastResetDate');
+      if (lastResetDate !== today) {
+        await resetStoredData();
+        await AsyncStorage.setItem('lastResetDate', today);
+      }
+    } catch (error) {
+      console.error('Failed to reset data:', error);
+    }
+  };
+
+  useEffect(() => {
+    resetIfNewDay();
+  }, []);
+
+  const renderMealSection = (mealKey: keyof typeof meals, mealData: MealData) => {
+  const mealNameMap = {
     breakfast: '朝食',
     lunch: '昼食',
-    dinner: '夜食',
-    snack: '軽食'
+    dinner: '夕食',
+    snack: '間食',
   };
-
-  const addFood = (mealKey: string) => {
-    // Function to handle adding food - will be connected to backend
-    console.log(`Add food to ${mealKey}`);
-  };
-
-  const renderMealSection = (mealKey: keyof typeof mealsData, mealData: MealData | null) => {
-    const mealName = mealNames[mealKey];
+  const mealName = mealNameMap[mealKey];
     
     return (
       <View key={mealKey}>
-        {mealData ? (
-          <View>
-            {/* Nutrition values row */}
-            <View style={styles.nutritionValuesRow}>
-              <Text style={styles.nutritionValue}>{mealData.fat}</Text>
-              <Text style={styles.nutritionValue}>{mealData.carbs}</Text>
-              <Text style={styles.nutritionValue}>{mealData.protein}</Text>
-              <Text style={styles.nutritionValue}>{mealData.percentage}%</Text>
-              <Text style={styles.calorieValue}>{mealData.totalCalories}</Text>
-            </View>
-            
+          <View>          
             {/* Meal name with underline */}
             <View style={styles.mealRowWithData}>
               <Text style={styles.mealName}>{mealName}</Text>
               <TouchableOpacity 
                 style={styles.addButton}
-                onPress={() => navigation.navigate('SelectFoodScreen')}
-                >
+                onPress={() => handleAddMeal(mealKey)}>
                 <Text style={styles.addButtonText}>+</Text>
                 </TouchableOpacity>
             </View>
@@ -120,17 +300,16 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             ))}
           </View>
-        ) : (
+        
           <View style={styles.mealRowEmpty}>
             <Text style={styles.mealName}>{mealName}</Text>
             <TouchableOpacity 
                 style={styles.addButton}
-                onPress={() => navigation.navigate('SelectFoodScreen')}
+                onPress={() => handleAddMeal(mealKey)}
                 >
                 <Text style={styles.addButtonText}>+</Text>
                 </TouchableOpacity>
           </View>
-        )}
       </View>
     );
   };
@@ -183,16 +362,25 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation }) => {
           {/* Nutrition Headers */}
           <View style={styles.mealHeader}>
             <Text style={styles.mealHeaderText}>脂質</Text>
-            <Text style={styles.mealHeaderText}>炭</Text>
+            <Text style={styles.mealHeaderText}> 炭水</Text>
             <Text style={styles.mealHeaderText}>た質</Text>
             <Text style={styles.mealHeaderText}>摂取%</Text>
             <Text style={styles.mealHeaderText}>カロリー</Text>
           </View>
 
+          {/* Total Nutrition Row (only once) */}
+          <View style={styles.nutritionValuesRow}>
+            <Text style={styles.nutritionValue}>{total.fat}g</Text>
+            <Text style={styles.nutritionValue}>{total.carbs}g</Text>
+            <Text style={styles.nutritionValue}>{total.protein}g</Text>
+            <Text style={styles.nutritionValue}>{total.percentage}%</Text>
+            <Text style={styles.calorieValue}>{total.totalCalories} kcal</Text>
+          </View>
+
           {/* Meals List */}
           <View style={styles.mealsContainer}>
-            {Object.entries(mealsData).map(([key, data]) => 
-              renderMealSection(key as keyof typeof mealsData, data)
+            {(Object.keys(meals) as MealType[]).map((key) =>
+              renderMealSection(key, meals[key])
             )}
           </View>
         </View>
@@ -226,7 +414,10 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation }) => {
                  
                     <TouchableOpacity
                       style={styles.navItem}
-                      onPress={() => navigation.navigate('DailyHealthScreen')}
+                      onPress={() => navigation.navigate('DailyHealthScreen', {
+                        mealType: 'breakfast', // Default to breakfast for editing
+                        mealData: JSON.parse(JSON.stringify(meals.breakfast)), // Pass the current
+                      })}
                     >
                       <Ionicons name="create-outline" size={24} color="#666" />
                     </TouchableOpacity>
@@ -237,11 +428,10 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation }) => {
                       <Ionicons name="person-outline" size={24} color="#666" />
                     </TouchableOpacity>
                   </View>
-       
-       
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
