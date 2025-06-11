@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
-  VitualPetLogin: undefined;
+  VirtualPetLogin: undefined;
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
@@ -172,42 +172,43 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Bottom Navigation */}
-                  <View style={styles.bottomNav}>
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('ReminderScreen')}
-                    >
-                      <Ionicons name="time-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                 
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('ProgressTrackerScreen')}
-                    >
-                      <Ionicons name="stats-chart-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                 
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('HomeScreen')}
-                    >
-                      <Ionicons name="home" size={24} color="#8B7CF6" />
-                    </TouchableOpacity>
-                 
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('DailyHealthScreen')}
-                    >
-                      <Ionicons name="create-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('UserProfileScreen')}
-                    >
-                      <Ionicons name="person-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                  </View>       
+     yang bagian ini nya juga bukan hanya homescreen nya yang berwarna ini #8B7CF6 tetapi saat di tekan yang lainnya warna itu yang akan berubah      {/* Bottom Navigation */}
+            <View style={styles.bottomNav}>
+              <TouchableOpacity
+                style={styles.navItem}
+                onPress={() => navigation.navigate('ReminderScreen')}
+              >
+                <Ionicons name="time-outline" size={24} color="#666" />
+              </TouchableOpacity>
+           
+              <TouchableOpacity
+                style={styles.navItem}
+                onPress={() => navigation.navigate('ProgressTrackerScreen')}
+              >
+                <Ionicons name="stats-chart-outline" size={24} color="#666" />
+              </TouchableOpacity>
+           
+              <TouchableOpacity
+                style={styles.navItem}
+                onPress={() => navigation.navigate('HomeScreen')}
+              >
+                <Ionicons name="home" size={24} color="#8B7CF6" />
+              </TouchableOpacity>
+           
+              <TouchableOpacity
+                style={styles.navItem}
+                onPress={() => navigation.navigate('DailyHealthScreen')}
+              >
+                <Ionicons name="create-outline" size={24} color="#666" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.navItem}
+                onPress={() => navigation.navigate('UserProfileScreen')}
+              >
+                <Ionicons name="person-outline" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
     </SafeAreaView>
   );
 };

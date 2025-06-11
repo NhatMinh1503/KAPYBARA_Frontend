@@ -54,7 +54,7 @@ export default function Register2() {
     };
 
     try {
-      const response = await fetch('http://10.108.1.108:3000/users', {
+      const response = await fetch('http://localhost:3000/users', {
         method: 'POST',
         headers: {'Content-Type': 'application/json',},
         body: JSON.stringify(fullData),

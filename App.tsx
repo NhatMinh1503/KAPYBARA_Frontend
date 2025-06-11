@@ -5,7 +5,7 @@ import { UserRegisterProvider } from './contexts/UserRegisterContext';
 
 // Import các màn hình
 import IndexLogin from './screens/IndexLogin';
-import VitualPetLogin from './screens/VirtualPetLogin';
+import VirtualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
 import NextRegisterScreen from './screens/NextRegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
@@ -21,7 +21,7 @@ import { PetRegisterProvider } from './contexts/PetRegisterContext';
 
 export type RootStackParamList = {
   IndexLogin: undefined;
-  VitualPetLogin: undefined;
+  VirtualPetLogin: undefined;
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
@@ -49,8 +49,8 @@ export default function App() {
             options={{ title: 'ようこそ' }}
           />
           <Stack.Screen
-            name="VitualPetLogin"
-            component={VitualPetLogin}
+            name="VirtualPetLogin"
+            component={VirtualPetLogin}
             options={{ title: 'ログイン' }}
           />
           <Stack.Screen
