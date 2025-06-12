@@ -224,7 +224,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     const storedUserId = await AsyncStorage.getItem('user_id');
     const log_date = getLogDate();
     try {
-      const response = await fetch('https://localhost:3000/daily-calories', {
+      const response = await fetch('http://localhost:3000/daily-calories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
