@@ -16,11 +16,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
-
-
+ 
+ 
 // Define the meal types
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-
+ 
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -42,20 +42,20 @@ type RootStackParamList = {
     onSave: (data: MealData) => void;
   };
 };
-
+ 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'DailyHealthScreen'>;
 type DailyHealthRouteProp = RouteProp<RootStackParamList, 'DailyHealthScreen'>;
-
+ 
 interface Props {
   navigation: HomeScreenNavigationProp;
   route: DailyHealthRouteProp;
 }
-
+ 
 interface FoodItem {
   name: string;
   calories: number;
 }
-
+ 
 interface MealData {
   fat: number;
   carbs: number;
@@ -64,22 +64,22 @@ interface MealData {
   totalCalories: number;
   foods: FoodItem[];
 }
-
+ 
 interface WaterIntake {
   amount: number;
   goal: number;
 }
-
+ 
 interface StepsData {
   steps: number;
   goal: number;
 }
-
+ 
 const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
   const [waterIntake, setWaterIntake] = useState('');
   const [steps, setSteps] = useState('');
   const isFocused = useIsFocused();
-
+ 
   // Sample data - akan diganti dengan data dari backend
    const defaultMealData = (): MealData => ({
     fat: 0,
@@ -89,48 +89,48 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     totalCalories: 0,
     foods: [],
   });
-
+ 
   const [meals, setMeals] = useState<Record<MealType, MealData>>({
     breakfast: defaultMealData(),
     lunch: defaultMealData(),
     dinner: defaultMealData(),
     snack: defaultMealData(),
   });
-
+ 
     useEffect(() => {
     if (isFocused && route.params?.mealType && route.params?.mealData) {
       const { mealType, mealData } = route.params;
       handleMealSave(mealType, mealData);
-
+ 
       navigation.setParams({
         mealType: undefined, // Clear the params after handling
         mealData: undefined, // Clear the params after handling
       });
     }
   }, [isFocused, route.params]);
-
+ 
   const handleAddMeal = (mealType: keyof typeof meals) => {
     navigation.navigate('SelectFoodScreen', {
       mealType,
       onSave: (data: MealData) => handleMealSave(mealType, data),
     });
   };
-
-
+ 
+ 
   const handleMealSave = (mealType: keyof typeof meals, newdata: MealData) => {
     setMeals((prevMeals) => {
       const existingFoods = prevMeals[mealType].foods;
       const updatedFoods = [...existingFoods, ...newdata.foods];
-
+ 
       const updateFat = prevMeals[mealType].fat + newdata.fat;
       const updateCarbs = prevMeals[mealType].carbs + newdata.carbs;
       const updateProtein = prevMeals[mealType].protein + newdata.protein;
       const updateTotalCalories = prevMeals[mealType].totalCalories + newdata.totalCalories;
-
+ 
       const updatePercentage = Math.round(
         ((updateFat + updateCarbs + updateProtein) / 100) * 100
       );
-
+ 
       return {
         ...prevMeals,
         [mealType]: {
@@ -144,7 +144,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     })
   };
-
+ 
   const calculateTotalNutrition = () => {
     const total = Object.values(meals).reduce(
       (acc, meal) => {
@@ -156,15 +156,15 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       },
       { fat: 0, carbs: 0, protein: 0, totalCalories: 0 }
     );
-
+ 
     const percentage = Math.round(
       ((total.fat + total.carbs + total.protein) / 100) * 100
     );
-
+ 
     return { ...total, percentage };
   };
   const total = calculateTotalNutrition();
-
+ 
   // Function to load meals to AsyncStorage
   useEffect(() => {
     const loadMeals = async () => {
@@ -180,13 +180,13 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     };
     loadMeals();
   }, []);
-
+ 
   const getStorageData = () => {
     const logicalDate = getLogDate(); // cut off time 03:00
     return `@meals:${logicalDate}`;
   }
-
-
+ 
+ 
   // Function to save meals to AsyncStorage
   useEffect(() => {
     const saveMeals = async () => {
@@ -199,7 +199,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     };
     saveMeals();
   }, [meals]);
-
+ 
   // Function to reset stored data (daily)
   const resetStoredData = async () => {
     await sendCaloriesToBackend(total.totalCalories);
@@ -213,12 +213,12 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
         snack: defaultMealData(),
       });
       Alert.alert('データがリセットされました');
-      
+     
     } catch (error) {
       console.error('Failed to reset stored data:', error);
     }
   };
-
+ 
   // Function to send calories to backend
   const sendCaloriesToBackend = async (totalCalories: number) => {
     const storedUserId = await AsyncStorage.getItem('user_id');
@@ -238,20 +238,20 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Error sending calories to backend:', error);
     }
   };
-
+ 
   // Function to set time to send data to backend
   function getLogDate() {
     const now = new Date();
     const hour = now.getHours();
-
+ 
     const logicalDate = new Date(now);
     if (hour < 3) {
       logicalDate.setDate(now.getDate() - 1); // 前日のデータを送信
     }
-
+ 
     return logicalDate.toISOString().split('T')[0]; // YYYY-MM-DD形式で返す
   };
-
+ 
   // Function to reset all data in new day
   const resetIfNewDay = async () => {
     try{
@@ -265,11 +265,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Failed to reset data:', error);
     }
   };
-
+ 
   useEffect(() => {
     resetIfNewDay();
   }, []);
-
+ 
   const renderMealSection = (mealKey: keyof typeof meals, mealData: MealData) => {
   const mealNameMap = {
     breakfast: '朝食',
@@ -278,20 +278,20 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     snack: '間食',
   };
   const mealName = mealNameMap[mealKey];
-    
+   
     return (
       <View key={mealKey}>
           <View>          
             {/* Meal name with underline */}
             <View style={styles.mealRowWithData}>
               <Text style={styles.mealName}>{mealName}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => handleAddMeal(mealKey)}>
                 <Text style={styles.addButtonText}>+</Text>
                 </TouchableOpacity>
             </View>
-            
+           
             {/* Food items */}
             {mealData.foods.map((food, index) => (
               <View key={index} style={styles.foodItemRow}>
@@ -300,10 +300,10 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
               </View>
             ))}
           </View>
-        
+       
           <View style={styles.mealRowEmpty}>
             <Text style={styles.mealName}>{mealName}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => handleAddMeal(mealKey)}
                 >
@@ -313,11 +313,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       </View>
     );
   };
-
+ 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
-      
+     
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Water Intake Section */}
         <View style={styles.section}>
@@ -336,7 +336,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <Text style={styles.goalText}>目標まであと 2 ml必要です！</Text>
         </View>
-
+ 
         {/* Steps Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -354,11 +354,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <Text style={styles.goalText}>目標まであと 7歩必要です！</Text>
         </View>
-
+ 
         {/* Meals Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>食事</Text>
-          
+         
           {/* Nutrition Headers */}
           <View style={styles.mealHeader}>
             <Text style={styles.mealHeaderText}>脂質</Text>
@@ -367,7 +367,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.mealHeaderText}>摂取%</Text>
             <Text style={styles.mealHeaderText}>カロリー</Text>
           </View>
-
+ 
           {/* Total Nutrition Row (only once) */}
           <View style={styles.nutritionValuesRow}>
             <Text style={styles.nutritionValue}>{total.fat}g</Text>
@@ -376,7 +376,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.nutritionValue}>{total.percentage}%</Text>
             <Text style={styles.calorieValue}>{total.totalCalories} kcal</Text>
           </View>
-
+ 
           {/* Meals List */}
           <View style={styles.mealsContainer}>
             {(Object.keys(meals) as MealType[]).map((key) =>
@@ -384,11 +384,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             )}
           </View>
         </View>
-        
+       
         {/* Add some bottom padding for the fixed navigation */}
         <View style={styles.bottomPadding} />
       </ScrollView>
-
+ 
       {/* Bottom Navigation */}
                   <View style={styles.bottomNav}>
                     <TouchableOpacity
@@ -431,8 +431,8 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     </SafeAreaView>
   );
 };
-
-
+ 
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -626,5 +626,5 @@ const styles = StyleSheet.create({
     padding: 8,
   },
 });
-
+ 
 export default DailyHealthScreen;

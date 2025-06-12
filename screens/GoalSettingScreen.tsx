@@ -16,7 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
-  VitualPetLogin: undefined;
+  VirtualPetLogin: undefined;
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;

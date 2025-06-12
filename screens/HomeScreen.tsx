@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
-  VitualPetLogin: undefined;
+  VirtualPetLogin: undefined;
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
@@ -55,7 +55,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     loading: true,
     error: null,
   });
- 
   // Function to fetch data from API
     const fetchWeatherData = async () => {
       try{
@@ -226,7 +225,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 <Ionicons name="person-outline" size={24} color="#666" />
               </TouchableOpacity>
             </View>
- 
+
     </SafeAreaView>
   );
 };

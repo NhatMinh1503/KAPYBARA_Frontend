@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../App'; // Hoặc đường dẫn đến file types của bạn
+import type { RootStackParamList } from '../types'; // Hoặc đường dẫn đến file types của bạn
 import { UserRegisterProvider, useUserRegister } from '../contexts/UserRegisterContext';
 
 type Props = {

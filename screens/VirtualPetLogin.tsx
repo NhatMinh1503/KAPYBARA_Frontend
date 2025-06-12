@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../App';
+import type { RootStackParamList } from '../types'
+
 
 // Definisikan tipe props yang menerima navigation
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
@@ -61,6 +62,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           value={emailName}
           onChangeText={setEmailName}
           placeholder="youremail@gmail.com"
+
         />
       </View>
 
@@ -71,6 +73,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         value={password}
         onChangeText={setPassword}
         placeholder="password"
+        returnKeyType="done"
+        onSubmitEditing={handleLogin} 
       />
 
       <TouchableOpacity>

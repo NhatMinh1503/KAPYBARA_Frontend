@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../App'; // hoặc từ '../types' nếu tách riêng
+import type { RootStackParamList } from '../types'; // hoặc từ '../types' nếu tách riêng
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'VitualPetLogin'>;
