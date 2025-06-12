@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
-import type { RootStackParamList } from '../App';
+import type { RootStackParamList } from '../types';
 import { PetRegisterProvider, usePetRegister } from '../contexts/PetRegisterContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

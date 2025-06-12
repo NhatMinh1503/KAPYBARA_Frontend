@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../App'; // hoặc từ '../types' nếu tách riêng
+import type { RootStackParamList } from '../types'; // hoặc từ '../types' nếu tách riêng
 
 type Props = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'VirtualPetLogin'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'VitualPetLogin'>;
 };
 
 export default function VitualPetLogin({ navigation }: Props) {
@@ -19,9 +19,9 @@ export default function VitualPetLogin({ navigation }: Props) {
       />
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('VirtualPetLogin')}
+        onPress={() => navigation.navigate('VitualPetLogin')}
       >
-        <Text style={styles.buttonText} onPress={() => navigation.navigate('VirtualPetLogin')}>ログイン</Text>
+        <Text style={styles.buttonText} onPress={() => navigation.navigate('VitualPetLogin')}>ログイン</Text>
       </TouchableOpacity>
       <View style={styles.linkContainer}>
         <Text style={styles.linkText}>はじめての方はこちら</Text>

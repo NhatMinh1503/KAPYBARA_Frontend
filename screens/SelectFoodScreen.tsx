@@ -13,60 +13,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Type definitions
-type RootStackParamList = {
-  IndexLogin: undefined;
-  VirtualPetLogin: undefined;
-  RegisterScreen: undefined;
-  NextRegisterScreen: undefined;
-  ChoosePetScreen: undefined;
-  LastRegisterScreen:undefined;
-  HomeScreen: undefined;
-  ReminderScreen: undefined;
-  ProgressTrackerScreen: undefined;
-  DailyHealthScreen: {
-    mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    mealData?: MealData;
-  };
-  UserProfileScreen: undefined;
-  SelectFoodScreen: {
-    mealType: MealType;
-    onSave: (data: MealData) => void;
-  };
-};
-
+import { MealType, MealData, FoodItemDetailed, RootStackParamList } from '../types';
+ 
 type SelectFoodRouteProp = RouteProp<RootStackParamList, 'SelectFoodScreen'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SelectFoodScreen'>;
-
+ 
 interface Props {
   navigation: NavigationProp;
   route: SelectFoodRouteProp;
 }
-
-interface FoodItem {
-  id: string;
-  name: string;
-  totalCalories: number;
-  protein: number;  
-  fat: number;
-  carbs: number;
-  isEnabled: boolean;
-}
-
-
-interface MealData {
-  fat: number;
-  protein: number;
-  carbs: number;
-  totalCalories: number;
-  percentages: number;
-  foods : { name: string; calories: number}[];
-}
-
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-
-
+ 
 const CustomToggle: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ isEnabled, onToggle }) => {
   return (
     <TouchableOpacity onPress={onToggle} style={styles.toggleContainer}>
@@ -74,26 +30,24 @@ const CustomToggle: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ 
     </TouchableOpacity>
   );
 };
-
+ 
 const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   const route = useRoute<SelectFoodRouteProp>();
   const mealsType = route.params.mealType;
   const onSave = route.params.onSave;
-
-
+ 
   const [searchText, setSearchText] = useState('');
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [foodItems, setFoodItems] = useState<FoodItemDetailed[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' = mealsType || 'breakfast';
-
-
+  const mealType: MealType = mealsType || 'breakfast';
+ 
   const fetchFoodData = async () => {
     if(searchText.trim() === '') {
-      setFoodItems([]); 
+      setFoodItems([]);
       return;
     }
-
+ 
     try {
       setIsLoading(true);
       const token = await AsyncStorage.getItem('token');
@@ -103,24 +57,24 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
           'Authorization': `Bearer ${token}`,
         }
       });
-
+ 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+ 
       const data = await response.json();
       console.log('Fetched food data:', data);
-
+ 
       const nutrients = Array.isArray(data.foodNutrients) ? data.foodNutrients : [];
-
+ 
       const getNutrientValue = (nutrientName: string) => {
         const nutrient = nutrients.find((n: any) => n.nutrientName.toLowerCase().includes(nutrientName.toLowerCase()));
-        return nutrient ? nutrient.value : 0;
+        return nutrient ? nutrient.value || 0 : 0; // Added fallback for undefined value
       };
-      
-      const foodItem = {
-        id: data.fdcId,
-        name: data.description,
+     
+      const foodItem: FoodItemDetailed = {
+        id: data.fdcId || Math.random().toString(), // Fallback ID
+        name: data.description || 'Unknown Food',
         totalCalories: getNutrientValue('Energy'),
         protein: getNutrientValue('Protein'),
         fat: getNutrientValue('Total lipid (fat)'),
@@ -128,23 +82,23 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
         isEnabled: false,
       }
       setFoodItems([foodItem]);
-      
+     
     } catch (error) {
       console.error('Fetch failed!', error);
     } finally {
       setIsLoading(false);
     }
   };
-
+ 
   useEffect(() => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
-
+ 
     debounceTimeout.current = setTimeout(() => {
       fetchFoodData();
     }, 500);
-
+ 
     return () => {
       if (debounceTimeout.current) {
         clearTimeout(debounceTimeout.current);
@@ -152,8 +106,7 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
     };
    
   }, [searchText]);
-
-
+ 
   const toggleSwitch = (id: string) => {
     setFoodItems(prev =>
       prev.map(item =>
@@ -161,52 +114,64 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
       )
     );
   };
-
+ 
   const saveSelectedFoods = () => {
     const selected = foodItems.filter(item => item.isEnabled);
-
-    const totalCalories = selected.reduce((sum, item) => sum + item.totalCalories, 0);
-    const totalProtein = selected.reduce((sum, item) => sum + item.protein, 0);
-    const totalFat = selected.reduce((sum, item) => sum + item.fat, 0);
-    const totalCarbs = selected.reduce((sum, item) => sum + item.carbs, 0);
-    
+ 
+    const totalCalories = selected.reduce((sum, item) => sum + (item.totalCalories || 0), 0);
+    const totalProtein = selected.reduce((sum, item) => sum + (item.protein || 0), 0);
+    const totalFat = selected.reduce((sum, item) => sum + (item.fat || 0), 0);
+    const totalCarbs = selected.reduce((sum, item) => sum + (item.carbs || 0), 0);
+   
     const mealData: MealData = {
       fat: totalFat,
       protein: totalProtein,
       carbs: totalCarbs,
       totalCalories: totalCalories,
-      percentages: 0,
+      percentage: 0,
       foods: selected.map(item => ({
-      name: item.name,
-      calories: item.totalCalories,
+        name: item.name,
+        calories: item.totalCalories || 0,
       })),
     };
-
+ 
     onSave(mealData);
     navigation.goBack();
   };
+ 
+  // Safe filtering with null checks
+  const filteredItems = Array.isArray(foodItems) ? foodItems.filter(item =>
+    item?.name?.toLowerCase().includes(searchText.toLowerCase())
+  ) : [];
 
-  const filteredItems = foodItems.filter(item =>
-    item.name.toLowerCase().includes(searchText.toLowerCase())
-  );
-
+  // Get meal name in Japanese
+  const getMealName = (type: MealType): string => {
+    const mealNames = {
+      breakfast: '朝食',
+      lunch: '昼食', 
+      dinner: '夕食',
+      snack: '間食'
+    };
+    return mealNames[type];
+  };
+ 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      
+     
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerButton}>
-          <Text style={styles.headerButtonText}>朝食</Text>
+          <Text style={styles.headerButtonText}>{getMealName(mealType)}</Text>
           <Ionicons name="chevron-down" size={16} color="#666" style={styles.chevronIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>食品</Text>
-        <TouchableOpacity style={styles.headerButton} 
+        <TouchableOpacity style={styles.headerButton}
         onPress={() => saveSelectedFoods()}>
           <Text style={styles.saveButton} >保存</Text>
         </TouchableOpacity>
       </View>
-
+ 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
@@ -219,56 +184,75 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
           placeholderTextColor="#999"
         />
       </View>
-
+ 
       {/* Food Items List */}
       <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
-        {filteredItems.map((item) => (
-          <View key={item.id} style={styles.listItem}>
-            <Text style={styles.itemText}>{item.name}</Text>
-            <CustomToggle 
-              isEnabled={item.isEnabled}
-              onToggle={() => toggleSwitch(item.id)}
-            />
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <Text>検索中...</Text>
           </View>
-        ))}
+        )}
+        
+        {/* Safe rendering with proper null checks */}
+        {filteredItems.length > 0 ? (
+          filteredItems.map((item) => (
+            <View key={item?.id || Math.random().toString()} style={styles.listItem}>
+              <View style={styles.itemContent}>
+                <Text style={styles.itemText}>{item?.name || 'Unknown Food'}</Text>
+                <Text style={styles.itemCalories}>
+                  {(item?.totalCalories || 0).toFixed(0)} kcal
+                </Text>
+              </View>
+              <CustomToggle
+                isEnabled={!!item?.isEnabled}
+                onToggle={() => toggleSwitch(item?.id)}
+              />
+            </View>
+          ))
+        ) : (
+          !isLoading && searchText.trim() !== '' && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>検索結果が見つかりません</Text>
+            </View>
+          )
+        )}
       </ScrollView>
-
+ 
       {/* Bottom Navigation */}
-                  <View style={styles.bottomNav}>
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('ReminderScreen')}
-                    >
-                      <Ionicons name="time-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                 
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('ProgressTrackerScreen')}
-                    >
-                      <Ionicons name="stats-chart-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                 
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('HomeScreen')}
-                    >
-                      <Ionicons name="home" size={24} color="#8B7CF6" />
-                    </TouchableOpacity>
-                 
-                    <TouchableOpacity
-                      style={styles.navItem}
-                    >
-                      <Ionicons name="create-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('UserProfileScreen')}
-                    >
-                      <Ionicons name="person-outline" size={24} color="#666" />
-                    </TouchableOpacity>
-                  </View>
-       
+      <View style={styles.bottomNav}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('ReminderScreen')}
+        >
+          <Ionicons name="time-outline" size={24} color="#666" />
+        </TouchableOpacity>
+     
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('ProgressTrackerScreen')}
+        >
+          <Ionicons name="stats-chart-outline" size={24} color="#666" />
+        </TouchableOpacity>
+     
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('HomeScreen')}
+        >
+          <Ionicons name="home" size={24} color="#8B7CF6" />
+        </TouchableOpacity>
+     
+        <TouchableOpacity
+          style={styles.navItem}
+        >
+          <Ionicons name="create-outline" size={24} color="#666" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('UserProfileScreen')}
+        >
+          <Ionicons name="person-outline" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -357,6 +341,22 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 80,
   },
+  // ADDED MISSING STYLES
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
   listItem: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -367,11 +367,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+  // ADDED MISSING itemContent STYLE
+  itemContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   itemText: {
     fontSize: 16,
     color: '#000',
     flex: 1,
     fontWeight: '400',
+  },
+  // ADDED MISSING itemCalories STYLE
+  itemCalories: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
+    marginLeft: 8,
   },
   toggleContainer: {
     padding: 5,
@@ -412,5 +427,5 @@ const styles = StyleSheet.create({
     padding: 8,
   },
 });
-
+ 
 export default SelectFoodScreen;
