@@ -18,7 +18,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogin = async () => {
     const fullEmail = `${emailName}@gmail.com`;
-    console.log('Logging in with:', fullEmail, password);
     // xử lý đăng nhập ở đây
 
     const finalData = {
@@ -33,15 +32,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             body: JSON.stringify(finalData),
           });
     
-          if(!response.ok){
-            throw new Error('Failed to register!');
-          }
-    
           const data = await response.json();
-          await AsyncStorage.setItem('token', data.token);
-
-          Alert.alert('Login success!');
-          navigation.navigate('HomeScreen');
+          if(response.ok){
+            await AsyncStorage.setItem('token', data.token);
+            await AsyncStorage.setItem('user_id', data.user_id.toString());
+            console.log(data.user_id)
+            Alert.alert('Login success!');
+            navigation.navigate('HomeScreen');
+          } else{
+            console.log('Login failed!');
+          }
         } catch (error) {
             if (error instanceof Error) {
               Alert.alert('エラー', error.message);

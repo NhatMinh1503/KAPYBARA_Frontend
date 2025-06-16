@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Type definitions
 type RootStackParamList = {
@@ -31,22 +32,79 @@ type RootStackParamList = {
 type Props = NativeStackScreenProps<RootStackParamList, 'UserProfileScreen'>;
 
 const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
-  const [name, setName] = useState('ヘルス タロウ');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [age, setAge] = useState('');
-  const [gender, setGender] = useState('男');
-  const [height, setHeight] = useState('170');
-  const [weight, setWeight] = useState('65');
+  const [gender, setGender] = useState('');
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
-  const onUpdatePress = () => {
-    Alert.alert('更新', 'プロフィールが更新されました。');
+  const onUpdatePress = async () => {
+      const userId = await AsyncStorage.getItem('user_id');
+      const token = await AsyncStorage.getItem('token');
+    try{
+      if (!userId) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
+
+      const fullData = {
+        user_name: name,
+        email: email,
+        age: parseInt(age),
+        gender: gender,
+        height: parseInt(height),
+        weight: parseInt(weight)
+      }
+      
+      const response = await fetch(`http://localhost:3000/users/update_data/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(fullData)
+      });
+      if(response.ok){
+        Alert.alert('更新', 'プロフィールが更新されました。');
+      }
+    }catch(error){
+      console.error('Error during update:', error); 
+    }
   };
 
   const selectGender = (selectedGender: string) => {
     setGender(selectedGender);
     setShowGenderDropdown(false);
   };
+
+  const userData = async () => {
+      const userId = await AsyncStorage.getItem('user_id');
+      const token = await AsyncStorage.getItem('token');
+    try{
+        const response = await fetch(`http://localhost:3000/users/getUser_data/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if(response.ok){
+        const data = await response.json();
+
+        setName(data.user_name);
+        setEmail(data.email);
+        setAge(data.age);
+        setGender(data.gender);
+        setHeight(data.height);
+        setWeight(data.weight);
+      }
+    }catch(error){
+      console.log("Unable to fetch user's data from database", error)
+    }
+  }
+
+  useEffect(() => {
+    userData();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
