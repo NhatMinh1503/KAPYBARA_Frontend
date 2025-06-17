@@ -32,8 +32,8 @@ type RootStackParamList = {
   ReminderScreen: undefined;
   ProgressTrackerScreen: undefined;
   DailyHealthScreen: {
-    mealType: MealType;
-    mealData: MealData;
+    mealType?: MealType;
+    mealData?: MealData;
   };
   UserProfileScreen: undefined;
   SelectFoodScreen: {
@@ -136,7 +136,6 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     const remaining = parseInt(await AsyncStorage.getItem('@remainingWater') ?? '0');
     const newRemaining = remaining - intake;
     setRemainingWater(newRemaining);
-     console.log(remainingWater);
     await AsyncStorage.setItem('@remainingWater', newRemaining.toString());
   }, [waterIntake]);
  
@@ -196,9 +195,19 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     const percentage = Math.round(((total.fat + total.carbs + total.protein) / 100) * 100);
     return { ...total, percentage };
   };
+
+  const saveTotalCalories = async () => {
+    const total = calculateTotalNutrition();
+    try{
+      await AsyncStorage.setItem('@calories', await total.totalCalories.toString());
+    }catch(err){
+      console.error('Error to save calories to Storage', err);
+    }
+  }
  
   const saveMealsToStorage = async () => {
     try {
+      saveTotalCalories();
       const key = `@meals:${getLogDate()}`;
       await AsyncStorage.setItem(key, JSON.stringify(meals));
     } catch (err) {
@@ -232,16 +241,18 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
  
   const resetStoredData = async () => {
     try {
-      const total = calculateTotalNutrition();
+      // const total = calculateTotalNutrition();
+      const calories = parseInt(await AsyncStorage.getItem('@calories') ?? '0');
       const water = parseInt(await AsyncStorage.getItem('@waterIntake') ?? '0');
       const steps = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
  
-      await sendDataToBackend(total.totalCalories, water, steps);
+      await sendDataToBackend(calories, water, steps);
  
       const key = `@meals:${getLogDate()}`;
       await AsyncStorage.removeItem(key);
       await AsyncStorage.setItem('@waterIntake', '0');
       await AsyncStorage.setItem('@stepsIntake', '0');
+      await AsyncStorage.setItem('@calories', '0');
  
       setMeals({
         breakfast: defaultMealData(),
@@ -259,8 +270,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
   const resetIfNewDay = useCallback(async () => {
     const today = getLogDate();
     const lastReset = await AsyncStorage.getItem('lastResetDate');
+
+    console.log('Today:', today);
+    console.log('Last Reset:', lastReset);
  
-    if (lastReset !== today) {
+    if (!lastReset || lastReset !== today) {
       await fetchGoals();
       await resetStoredData();
       await AsyncStorage.setItem('lastResetDate', today);
