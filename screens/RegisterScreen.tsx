@@ -13,17 +13,17 @@ export default function RegisterScreen({ navigation }: Props) {
   const { setUserData } = useUserRegister();
 
   const [name, setName] = useState('');
-  const [emailName, setEmailName] = useState('');
-  const [emailDomain, setEmailDomain] = useState('gmail.com');
+  const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('女性');
+
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleNext = () => {
     setUserData({
       user_name: name,
-      email: `${emailName}@${emailDomain}`,
+      email,
       password,
       age: parseInt(age),
       gender,
@@ -41,7 +41,7 @@ export default function RegisterScreen({ navigation }: Props) {
         <Text style={styles.label}>名前</Text>
         <TextInput
           style={[styles.input, focusedField === 'name' && styles.inputFocused]}
-          placeholder="ヘルス タロウ"
+          placeholder=""
           value={name}
           onChangeText={setName}
           onFocus={() => setFocusedField('name')}
@@ -52,21 +52,21 @@ export default function RegisterScreen({ navigation }: Props) {
         <Text style={styles.label}>メールアドレス</Text>
         <View style={styles.emailRow}>
           <TextInput
-            style={[styles.emailInput, focusedField === 'email' && styles.inputFocused]}
-            placeholder="YourEmail"
-            value={emailName}
-            onChangeText={setEmailName}
-            onFocus={() => setFocusedField('email')}
-            onBlur={() => setFocusedField(null)}
-          />
-          <Text style={styles.at}>@{emailDomain}</Text>
+          style={[styles.input, focusedField === 'email' && styles.inputFocused]}
+          placeholder=""
+          value={email}
+          onChangeText={setEmail}
+          onFocus={() => setFocusedField('email')}
+          onBlur={() => setFocusedField(null)}
+          keyboardType="email-address"
+        />
         </View>
 
         {/* パスワード */}
         <Text style={styles.label}>パスワード</Text>
         <TextInput
           style={[styles.input, focusedField === 'password' && styles.inputFocused]}
-          placeholder="パスワード"
+          placeholder=""
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -81,7 +81,7 @@ export default function RegisterScreen({ navigation }: Props) {
             <View style={styles.ageRow}>
               <TextInput
                 style={[styles.input, focusedField === 'age' && styles.inputFocused]}
-                placeholder="28"
+                placeholder=""
                 keyboardType="numeric"
                 value={age}
                 onChangeText={setAge}

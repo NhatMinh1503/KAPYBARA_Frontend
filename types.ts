@@ -5,7 +5,16 @@ export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export interface FoodItem {
   name: string;
   calories: number;
+  quantity?: number;
+  fat?: number;
+  carbs?: number;
+  protein?: number;
+  caloriesPerUnit?: number;
+  fatPerUnit?: number;
+  carbsPerUnit?: number;
+  proteinPerUnit?: number;
 }
+
 
 export interface MealData {
   fat: number;
@@ -28,7 +37,7 @@ export interface FoodItemDetailed {
 
 export type RootStackParamList = {
   IndexLogin: undefined;
-  VitualPetLogin: undefined;
+  VirtualPetLogin: undefined;
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
@@ -37,9 +46,9 @@ export type RootStackParamList = {
   ReminderScreen: undefined;
   ProgressTrackerScreen: undefined;
   DailyHealthScreen: {
-    mealType?: MealType;
-    mealData?: MealData;
-  };
+  mealType?: MealType;
+  mealData?: MealData;
+} | undefined;
   UserProfileScreen: undefined;
   GoalSettingScreen: undefined;
   SelectFoodScreen: {

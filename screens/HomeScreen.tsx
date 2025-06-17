@@ -123,7 +123,16 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }
         return <Text>--°C</Text>;
       };
- 
+
+      const getCurrentRouteName = () => {
+    try {
+      const state = navigation.getState();
+      return state.routes[state.index]?.name || '';
+    } catch (error) {
+      console.error('Error getting current route name:', error);
+      return '';
+    }
+  }; 
  
   return (
     <SafeAreaView style={[styles.container, { paddingBottom: 80 }]}>
@@ -189,44 +198,79 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.messageText}>{weatherData.message}</Text>
       </TouchableOpacity>
  
-      {/* Bottom Navigation */}
+       {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
             <View style={styles.bottomNav}>
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('ReminderScreen')}
               >
-                <Ionicons name="time-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="time-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('ProgressTrackerScreen')}
               >
-                <Ionicons name="stats-chart-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="stats-chart-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('HomeScreen')}
               >
-                <Ionicons name="home" size={24} color="#8B7CF6" />
+                <Ionicons 
+                  name="home" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('DailyHealthScreen')}
               >
-                <Ionicons name="create-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="create-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('UserProfileScreen')}
               >
-                <Ionicons name="person-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="person-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
             </View>
-
-    </SafeAreaView>
+          </SafeAreaView>
   );
 };
  
@@ -363,3 +407,4 @@ const styles = StyleSheet.create({
 });
  
 export default HomeScreen;
+ 

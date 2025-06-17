@@ -15,33 +15,39 @@ import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+ 
 // Import types from your types file
 import { RootStackParamList, MealType, MealData, FoodItem } from '../types';
-
+ 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'DailyHealthScreen'>;
 type DailyHealthRouteProp = RouteProp<RootStackParamList, 'DailyHealthScreen'>;
-
+ 
 interface Props {
   navigation: HomeScreenNavigationProp;
   route: DailyHealthRouteProp;
 }
-
+ 
 interface WaterIntake {
   amount: number;
   goal: number;
 }
-
+ 
 interface StepsData {
   steps: number;
   goal: number;
 }
 
+// Extended FoodItem interface to include quantity
+interface ExtendedFoodItem extends FoodItem {
+  quantity: number;
+  originalCalories: number; // Store original calories per unit
+}
+ 
 const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
   const [waterIntake, setWaterIntake] = useState('');
   const [steps, setSteps] = useState('');
   const isFocused = useIsFocused();
-
+ 
   // Default meal data factory function
   const defaultMealData = (): MealData => ({
     fat: 0,
@@ -51,19 +57,19 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     totalCalories: 0,
     foods: [],
   });
-
+ 
   const [meals, setMeals] = useState<Record<MealType, MealData>>({
     breakfast: defaultMealData(),
     lunch: defaultMealData(),
     dinner: defaultMealData(),
     snack: defaultMealData(),
   });
-
+ 
   useEffect(() => {
     if (isFocused && route.params?.mealType && route.params?.mealData) {
       const { mealType, mealData } = route.params;
       handleMealSave(mealType, mealData);
-
+ 
       // Clear the params after handling
       navigation.setParams({
         mealType: undefined,
@@ -71,28 +77,36 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       });
     }
   }, [isFocused, route.params, navigation]);
-
+ 
   const handleAddMeal = (mealType: keyof typeof meals) => {
     navigation.navigate('SelectFoodScreen', {
       mealType,
       onSave: (data: MealData) => handleMealSave(mealType, data),
     });
   };
-
+ 
   const handleMealSave = (mealType: keyof typeof meals, newdata: MealData) => {
     setMeals((prevMeals) => {
       const existingFoods = prevMeals[mealType].foods;
-      const updatedFoods = [...existingFoods, ...newdata.foods];
-
+      
+      // Convert new foods to extended format with quantity and original calories
+      const extendedNewFoods = newdata.foods.map(food => ({
+        ...food,
+        quantity: 1,
+        originalCalories: food.calories
+      }));
+      
+      const updatedFoods = [...existingFoods, ...extendedNewFoods];
+ 
       const updateFat = prevMeals[mealType].fat + newdata.fat;
       const updateCarbs = prevMeals[mealType].carbs + newdata.carbs;
       const updateProtein = prevMeals[mealType].protein + newdata.protein;
       const updateTotalCalories = prevMeals[mealType].totalCalories + newdata.totalCalories;
-
+ 
       const updatePercentage = Math.round(
         ((updateFat + updateCarbs + updateProtein) / 100) * 100
       );
-
+ 
       return {
         ...prevMeals,
         [mealType]: {
@@ -107,6 +121,110 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   };
 
+  // Function to update food quantity
+  const updateFoodQuantity = (mealType: keyof typeof meals, foodIndex: number, newQuantity: number) => {
+    if (newQuantity <= 0) return;
+
+    setMeals((prevMeals) => {
+      const currentMeal = prevMeals[mealType];
+      const updatedFoods = [...currentMeal.foods];
+      const food = updatedFoods[foodIndex] as ExtendedFoodItem;
+      
+      // Calculate difference in calories
+      const oldTotalCalories = food.calories;
+      const newTotalCalories = food.originalCalories * newQuantity;
+      const caloriesDifference = newTotalCalories - oldTotalCalories;
+      
+      // Update food item
+      updatedFoods[foodIndex] = {
+        ...food,
+        quantity: newQuantity,
+        calories: newTotalCalories
+      };
+
+      // Recalculate meal totals
+      const newTotalMealCalories = currentMeal.totalCalories + caloriesDifference;
+      
+      return {
+        ...prevMeals,
+        [mealType]: {
+          ...currentMeal,
+          totalCalories: newTotalMealCalories,
+          foods: updatedFoods,
+        },
+      };
+    });
+  };
+
+  // Function to delete food item
+  const deleteFoodItem = (mealType: keyof typeof meals, foodIndex: number) => {
+    Alert.alert(
+      '食品を削除',
+      'この食品を削除しますか？',
+      [
+        {
+          text: 'キャンセル',
+          style: 'cancel',
+        },
+        {
+          text: '削除',
+          style: 'destructive',
+          onPress: () => {
+            setMeals((prevMeals) => {
+              const currentMeal = prevMeals[mealType];
+              const updatedFoods = [...currentMeal.foods];
+              const foodToDelete = updatedFoods[foodIndex];
+              
+              if (!foodToDelete) {
+                console.log('Food item not found at index:', foodIndex);
+                return prevMeals;
+              }
+              
+              // Remove the food item
+              updatedFoods.splice(foodIndex, 1);
+              
+              // Recalculate all nutritional values based on remaining foods
+              const newTotals = updatedFoods.reduce(
+                (acc, food) => {
+                  // Assuming we need to calculate nutrition from remaining foods
+                  // Since we don't have individual nutrition data, we'll proportionally reduce
+                  acc.totalCalories += food.calories;
+                  return acc;
+                },
+                { fat: 0, carbs: 0, protein: 0, totalCalories: 0 }
+              );
+
+              // Calculate proportional reduction for fat, carbs, protein
+              const calorieRatio = updatedFoods.length > 0 ? newTotals.totalCalories / currentMeal.totalCalories : 0;
+              
+              const newFat = Math.round(currentMeal.fat * calorieRatio);
+              const newCarbs = Math.round(currentMeal.carbs * calorieRatio);
+              const newProtein = Math.round(currentMeal.protein * calorieRatio);
+              
+              const newPercentage = updatedFoods.length > 0 ? 
+                Math.round(((newFat + newCarbs + newProtein) / 100) * 100) : 0;
+              
+              console.log(`Deleting food item: ${foodToDelete.name} from ${mealType}`);
+              console.log(`New totals - Calories: ${newTotals.totalCalories}, Foods count: ${updatedFoods.length}`);
+              
+              return {
+                ...prevMeals,
+                [mealType]: {
+                  fat: newFat,
+                  carbs: newCarbs,
+                  protein: newProtein,
+                  percentage: newPercentage,
+                  totalCalories: newTotals.totalCalories,
+                  foods: updatedFoods,
+                },
+              };
+            });
+          },
+        },
+      ]
+    );
+  };
+ 
   const calculateTotalNutrition = () => {
     const total = Object.values(meals).reduce(
       (acc, meal) => {
@@ -118,21 +236,21 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       },
       { fat: 0, carbs: 0, protein: 0, totalCalories: 0 }
     );
-
+ 
     const percentage = Math.round(
       ((total.fat + total.carbs + total.protein) / 100) * 100
     );
-
+ 
     return { ...total, percentage };
   };
-
+ 
   const total = calculateTotalNutrition();
-
+ 
   const getStorageData = () => {
     const logicalDate = getLogDate();
     return `@meals:${logicalDate}`;
   };
-
+ 
   // Function to load meals from AsyncStorage
   useEffect(() => {
     const loadMeals = async () => {
@@ -140,7 +258,18 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
         const storedData = getStorageData();
         const storedMeals = await AsyncStorage.getItem(storedData);
         if (storedMeals) {
-          setMeals(JSON.parse(storedMeals));
+          const parsedMeals = JSON.parse(storedMeals);
+          
+          // Ensure backward compatibility by adding quantity and originalCalories to existing foods
+          Object.keys(parsedMeals).forEach(mealType => {
+            parsedMeals[mealType].foods = parsedMeals[mealType].foods.map((food: any) => ({
+              ...food,
+              quantity: food.quantity || 1,
+              originalCalories: food.originalCalories || food.calories
+            }));
+          });
+          
+          setMeals(parsedMeals);
         }
       } catch (error) {
         console.error('Failed to load meals from storage:', error);
@@ -148,7 +277,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     };
     loadMeals();
   }, []);
-
+ 
   // Function to save meals to AsyncStorage
   useEffect(() => {
     const saveMeals = async () => {
@@ -161,7 +290,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     };
     saveMeals();
   }, [meals]);
-
+ 
   // Function to reset stored data (daily)
   const resetStoredData = async () => {
     await sendCaloriesToBackend(total.totalCalories);
@@ -179,7 +308,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Failed to reset stored data:', error);
     }
   };
-
+ 
   // Function to send calories to backend
   const sendCaloriesToBackend = async (totalCalories: number) => {
     const storedUserId = await AsyncStorage.getItem('user_id');
@@ -199,20 +328,20 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Error sending calories to backend:', error);
     }
   };
-
+ 
   // Function to set time to send data to backend
   function getLogDate() {
     const now = new Date();
     const hour = now.getHours();
-
+ 
     const logicalDate = new Date(now);
     if (hour < 3) {
       logicalDate.setDate(now.getDate() - 1); // 前日のデータを送信
     }
-
+ 
     return logicalDate.toISOString().split('T')[0]; // YYYY-MM-DD形式で返す
   }
-
+ 
   // Function to reset all data in new day
   const resetIfNewDay = async () => {
     try {
@@ -226,11 +355,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Failed to reset data:', error);
     }
   };
-
+ 
   useEffect(() => {
     resetIfNewDay();
   }, []);
-
+ 
   const renderMealSection = (mealKey: keyof typeof meals, mealData: MealData) => {
     const mealNameMap = {
       breakfast: '朝食',
@@ -239,9 +368,9 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       snack: '間食',
     };
     const mealName = mealNameMap[mealKey];
-
+ 
     const hasFoods = mealData.foods.length > 0;
-
+ 
     return (
       <View key={mealKey}>
         {hasFoods ? (
@@ -255,14 +384,52 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
                 <Text style={styles.addButtonText}>+</Text>
               </TouchableOpacity>
             </View>
-
+ 
             {/* Food items */}
-            {mealData.foods.map((food, index) => (
-              <View key={index} style={styles.foodItemRow}>
-                <Text style={styles.foodItemName}>{food.name}</Text>
-                <Text style={styles.foodItemCalories}>{food.calories}</Text>
-              </View>
-            ))}
+            {mealData.foods.map((food, index) => {
+              const extendedFood = food as ExtendedFoodItem;
+              return (
+                <View key={index} style={styles.foodItemRow}>
+                  <View style={styles.foodItemInfo}>
+                    <Text style={styles.foodItemName}>{food.name}</Text>
+                    <Text style={styles.foodItemCalories}>{food.calories} kcal</Text>
+                  </View>
+                  
+                  <View style={styles.foodItemControls}>
+                    {/* Quantity controls */}
+                    <View style={styles.quantityContainer}>
+                      <TouchableOpacity
+                        style={styles.quantityButton}
+                        onPress={() => updateFoodQuantity(mealKey, index, (extendedFood.quantity || 1) - 1)}
+                        disabled={(extendedFood.quantity || 1) <= 1}
+                      >
+                        <Text style={[
+                          styles.quantityButtonText,
+                          (extendedFood.quantity || 1) <= 1 && styles.quantityButtonDisabled
+                        ]}>-</Text>
+                      </TouchableOpacity>
+                      
+                      <Text style={styles.quantityText}>{extendedFood.quantity || 1}</Text>
+                      
+                      <TouchableOpacity
+                        style={styles.quantityButton}
+                        onPress={() => updateFoodQuantity(mealKey, index, (extendedFood.quantity || 1) + 1)}
+                      >
+                        <Text style={styles.quantityButtonText}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {/* Delete button */}
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => deleteFoodItem(mealKey, index)}
+                    >
+                      <Ionicons name="trash-outline" size={16} color="#ff4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         ) : (
           /* Empty meal row */
@@ -278,11 +445,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       </View>
     );
   };
-
+ 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
-
+ 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Water Intake Section */}
         <View style={styles.section}>
@@ -301,7 +468,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <Text style={styles.goalText}>目標まであと 2 ml必要です！</Text>
         </View>
-
+ 
         {/* Steps Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -319,11 +486,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <Text style={styles.goalText}>目標まであと 7歩必要です！</Text>
         </View>
-
+ 
         {/* Meals Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>食事</Text>
-
+ 
           {/* Nutrition Headers */}
           <View style={styles.mealHeader}>
             <Text style={styles.mealHeaderText}>脂質</Text>
@@ -332,7 +499,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.mealHeaderText}>摂取%</Text>
             <Text style={styles.mealHeaderText}>カロリー</Text>
           </View>
-
+ 
           {/* Total Nutrition Row */}
           <View style={styles.nutritionValuesRow}>
             <Text style={styles.nutritionValue}>{total.fat}g</Text>
@@ -341,7 +508,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.nutritionValue}>{total.percentage}%</Text>
             <Text style={styles.calorieValue}>{total.totalCalories} kcal</Text>
           </View>
-
+ 
           {/* Meals List */}
           <View style={styles.mealsContainer}>
             {(Object.keys(meals) as MealType[]).map((key) =>
@@ -349,11 +516,11 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             )}
           </View>
         </View>
-
+ 
         {/* Add some bottom padding for the fixed navigation */}
         <View style={styles.bottomPadding} />
       </ScrollView>
-
+ 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity
@@ -362,21 +529,21 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
         >
           <Ionicons name="time-outline" size={24} color="#666" />
         </TouchableOpacity>
-
+ 
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('ProgressTrackerScreen')}
         >
           <Ionicons name="stats-chart-outline" size={24} color="#666" />
         </TouchableOpacity>
-
+ 
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('HomeScreen')}
         >
           <Ionicons name="home" size={24} color="#8B7CF6" />
         </TouchableOpacity>
-
+ 
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('DailyHealthScreen', {
@@ -386,7 +553,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
         >
           <Ionicons name="create-outline" size={24} color="#666" />
         </TouchableOpacity>
-
+ 
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('UserProfileScreen')}
@@ -397,12 +564,14 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     </SafeAreaView>
   );
 };
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',
+    paddingTop: 20,
   },
+
   scrollView: {
     flex: 1,
   },
@@ -540,21 +709,62 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  foodItemName: {
-    fontSize: 12,
-    color: '#666',
+  foodItemInfo: {
     flex: 1,
+    marginRight: 12,
+  },
+  foodItemName: {
+    fontSize: 14,
+    color: '#000',
+    marginBottom: 4,
   },
   foodItemCalories: {
     fontSize: 12,
     color: '#666',
-    minWidth: 30,
-    textAlign: 'right',
+  },
+  foodItemControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 6,
+    paddingHorizontal: 4,
+  },
+  quantityButton: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+  },
+  quantityButtonText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
+  },
+  quantityButtonDisabled: {
+    color: '#ccc',
+  },
+  quantityText: {
+    fontSize: 14,
+    color: '#000',
+    minWidth: 24,
+    textAlign: 'center',
+    marginHorizontal: 8,
+  },
+  deleteButton: {
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   reportButton: {
     backgroundColor: '#f8f8f8',
@@ -591,5 +801,5 @@ const styles = StyleSheet.create({
     padding: 8,
   },
 });
-
+ 
 export default DailyHealthScreen;

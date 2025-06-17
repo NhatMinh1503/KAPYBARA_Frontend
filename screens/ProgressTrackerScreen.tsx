@@ -100,6 +100,7 @@ interface UserGoals {
   water: number;
 }
 
+
 const { width: screenWidth } = Dimensions.get('window');
 
 const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
@@ -244,6 +245,7 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
            userGoals.calories !== 2000 || userGoals.water !== 2000;
   };
 
+  
   // Weight chart rendering
   const renderWeightChart = () => {
     console.log('Rendering weight chart');
@@ -301,7 +303,9 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
     );
   };
 
-  // Bar chart rendering
+  
+
+ // Bar chart rendering - Updated version with more prominent goal line
   const renderBarChart = () => {
     console.log('Rendering bar chart for:', activeTab);
     
@@ -312,12 +316,6 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.chartPlaceholder}>
         {Svg && typeof Svg === 'function' ? (
           <Svg width={screenWidth - 80} height={200} viewBox="0 0 320 180">
-            {/* Dynamic goal line */}
-            <Line x1="20" y1="80" x2="300" y2="80" stroke="#ff4444" strokeWidth="2" strokeDasharray="3,3" />
-            <SvgText x="250" y="75" fontSize="10" fill="#ff4444">
-              目標 {currentData.goal}{currentData.unit}
-            </SvgText>
-            
             {/* Bars */}
             {data.slice(0, 12).map((item, index) => {
               const barWidth = 18;
@@ -351,19 +349,58 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
                 </React.Fragment>
               );
             })}
+            
+            {/* Dynamic goal line - More prominent like weight chart */}
+            {(() => {
+              const goalY = 160 - ((currentData.goal / maxValue) * 120);
+              const clampedGoalY = Math.max(20, Math.min(150, goalY));
+              
+              return (
+                <React.Fragment>
+                  <Line 
+                    x1="20" 
+                    y1={clampedGoalY} 
+                    x2="300" 
+                    y2={clampedGoalY} 
+                    stroke="#ff4444" 
+                    strokeWidth="2" 
+                    strokeDasharray="5,5" 
+                  />
+                  <SvgText 
+                    x="250" 
+                    y={clampedGoalY - 5} 
+                    fontSize="11" 
+                    fill="#ff4444"
+                    fontWeight="bold"
+                  >
+                    目標 {currentData.goal.toLocaleString()}{currentData.unit}
+                  </SvgText>
+                </React.Fragment>
+              );
+            })()}
           </Svg>
         ) : (
           <View style={styles.fallbackChart}>
             <Text style={styles.fallbackText}>
               📊 {activeTab}チャート
-              {'\n\n'}目標: {currentData.goal}{currentData.unit}
-              {'\n'}平均: {Math.round(data.reduce((sum, item) => sum + (item.value || 0), 0) / data.length || 0)}{currentData.unit}
+              {'\n\n'}目標: {currentData.goal.toLocaleString()}{currentData.unit}
+              {'\n'}平均: {Math.round(data.reduce((sum, item) => sum + (item.value || 0), 0) / data.length || 0).toLocaleString()}{currentData.unit}
               {'\n\n'}データポイント: {data.length}個
             </Text>
           </View>
         )}
       </View>
     );
+  };
+  
+  const getCurrentRouteName = () => {
+    try {
+      const state = navigation.getState();
+      return state.routes[state.index]?.name || '';
+    } catch (error) {
+      console.error('Error getting current route name:', error);
+      return '';
+    }
   };
 
   return (
@@ -490,48 +527,89 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.periodLabel}>表示期間: {selectedPeriod}</Text>
       </ScrollView>
 
-      yang bagian ini nya juga bukan hanya homescreen nya yang berwarna ini #8B7CF6 tetapi saat di tekan yang lainnya warna itu yang akan berubah      {/* Bottom Navigation */}
+ {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
             <View style={styles.bottomNav}>
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('ReminderScreen')}
               >
-                <Ionicons name="time-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="time-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('ProgressTrackerScreen')}
               >
-                <Ionicons name="stats-chart-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="stats-chart-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('HomeScreen')}
               >
-                <Ionicons name="home" size={24} color="#8B7CF6" />
+                <Ionicons 
+                  name="home" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('DailyHealthScreen')}
               >
-                <Ionicons name="create-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="create-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('UserProfileScreen')}
               >
-                <Ionicons name="person-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="person-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
             </View>
-
-    </SafeAreaView>
+          </SafeAreaView>
   );
 };
 
+
+
 const styles = StyleSheet.create({
+   activeNavItem: {
+    opacity: 1,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',

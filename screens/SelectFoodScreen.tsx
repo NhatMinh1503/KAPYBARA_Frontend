@@ -91,6 +91,7 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   };
  
   useEffect(() => {
+    console.log('searchText updated:', searchText);
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
@@ -143,33 +144,46 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   const filteredItems = Array.isArray(foodItems) ? foodItems.filter(item =>
     item?.name?.toLowerCase().includes(searchText.toLowerCase())
   ) : [];
-
+ 
   // Get meal name in Japanese
   const getMealName = (type: MealType): string => {
     const mealNames = {
       breakfast: '朝食',
-      lunch: '昼食', 
+      lunch: '昼食',
       dinner: '夕食',
       snack: '間食'
     };
     return mealNames[type];
   };
  
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-     
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Text style={styles.headerButtonText}>{getMealName(mealType)}</Text>
-          <Ionicons name="chevron-down" size={16} color="#666" style={styles.chevronIcon} />
-        </TouchableOpacity>
+  const getCurrentRouteName = () => {
+    try {
+      const state = navigation.getState();
+      return state.routes[state.index]?.name || '';
+    } catch (error) {
+      console.error('Error getting current route name:', error);
+      return '';
+    }
+  };
+
+const handleBack = () => {
+  navigation.goBack();
+};
+
+return (
+  <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
+
+    {/* Header */}
+    <View style={styles.header}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+  <Ionicons name="chevron-back" size={24} color="#333" />
+</TouchableOpacity>
+
         <Text style={styles.headerTitle}>食品</Text>
-        <TouchableOpacity style={styles.headerButton}
-        onPress={() => saveSelectedFoods()}>
-          <Text style={styles.saveButton} >保存</Text>
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.headerButton} onPress={saveSelectedFoods}>
+  <Text style={styles.saveButton}>保存</Text>
+</TouchableOpacity>
       </View>
  
       {/* Search Bar */}
@@ -177,7 +191,7 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
         <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="唐揚げ"
+          placeholder=""
           value={searchText}
           onChangeText={setSearchText}
           onSubmitEditing={fetchFoodData}
@@ -218,78 +232,122 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
         )}
       </ScrollView>
  
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('ReminderScreen')}
-        >
-          <Ionicons name="time-outline" size={24} color="#666" />
-        </TouchableOpacity>
-     
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('ProgressTrackerScreen')}
-        >
-          <Ionicons name="stats-chart-outline" size={24} color="#666" />
-        </TouchableOpacity>
-     
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('HomeScreen')}
-        >
-          <Ionicons name="home" size={24} color="#8B7CF6" />
-        </TouchableOpacity>
-     
-        <TouchableOpacity
-          style={styles.navItem}
-        >
-          <Ionicons name="create-outline" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('UserProfileScreen')}
-        >
-          <Ionicons name="person-outline" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-};
-
+     {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
+                 <View style={styles.bottomNav}>
+                   <TouchableOpacity
+                     style={[
+                       styles.navItem,
+                       getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+                     ]}
+                     onPress={() => navigation.navigate('ReminderScreen')}
+                   >
+                     <Ionicons 
+                       name="time-outline" 
+                       size={24} 
+                       color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                     />
+                   </TouchableOpacity>
+           
+                   <TouchableOpacity
+                     style={[
+                       styles.navItem,
+                       getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+                     ]}
+                     onPress={() => navigation.navigate('ProgressTrackerScreen')}
+                   >
+                     <Ionicons 
+                       name="stats-chart-outline" 
+                       size={24} 
+                       color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                     />
+                   </TouchableOpacity>
+           
+                   <TouchableOpacity
+                     style={[
+                       styles.navItem,
+                       getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+                     ]}
+                     onPress={() => navigation.navigate('HomeScreen')}
+                   >
+                     <Ionicons 
+                       name="home" 
+                       size={24} 
+                       color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                     />
+                   </TouchableOpacity>
+           
+                   <TouchableOpacity
+                     style={[
+                       styles.navItem,
+                       getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+                     ]}
+                     onPress={() => navigation.navigate('DailyHealthScreen')}
+                   >
+                     <Ionicons 
+                       name="create-outline" 
+                       size={24} 
+                       color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                     />
+                   </TouchableOpacity>
+           
+                   <TouchableOpacity
+                     style={[
+                       styles.navItem,
+                       getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+                     ]}
+                     onPress={() => navigation.navigate('UserProfileScreen')}
+                   >
+                     <Ionicons 
+                       name="person-outline" 
+                       size={24} 
+                       color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                     />
+                   </TouchableOpacity>
+                 </View>
+               </SafeAreaView>
+       );
+     };
+ 
 const styles = StyleSheet.create({
+  activeNavItem: {
+    opacity: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  headerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    backgroundColor: '#f8f9fa',
-    minWidth: 60,
-    justifyContent: 'center',
-  },
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingHorizontal: 16,
+  paddingVertical: 16,
+  backgroundColor: 'transparent',
+},
+
+backButton: {
+  paddingHorizontal: 4,
+  paddingVertical: 4,
+  backgroundColor: 'transparent',
+  borderWidth: 0,
+  borderColor: 'transparent',
+  borderRadius: 0,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+headerButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: '#34C759',
+  backgroundColor: '#34C759',
+  minWidth: 60,
+  justifyContent: 'center',
+},
   headerButtonText: {
     fontSize: 14,
     color: '#666',
@@ -305,8 +363,8 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     fontSize: 14,
-    color: '#666',
-    fontWeight: '400',
+    color: 'white',
+    fontWeight: 'bold',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -341,7 +399,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 80,
   },
-  // ADDED MISSING STYLES
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
@@ -367,7 +424,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  // ADDED MISSING itemContent STYLE
   itemContent: {
     flex: 1,
     flexDirection: 'row',
