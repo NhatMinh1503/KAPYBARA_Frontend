@@ -207,9 +207,9 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
+         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+    <Ionicons name="chevron-back" size={24} color="#333" />
+  </TouchableOpacity>
         <Text style={styles.headerTitle}>目標設定</Text>
         <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
           <Text style={styles.resetButtonText}>リセット</Text>

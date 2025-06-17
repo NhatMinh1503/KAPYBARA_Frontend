@@ -64,6 +64,8 @@ interface MealData {
   foods: FoodItem[];
 }
  
+
+
 // ---------- Utility Functions ----------
 const getLogDate = (): string => {
   const now = new Date();
@@ -195,7 +197,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     const percentage = Math.round(((total.fat + total.carbs + total.protein) / 100) * 100);
     return { ...total, percentage };
   };
-
+ 
   const saveTotalCalories = async () => {
     const total = calculateTotalNutrition();
     try{
@@ -238,6 +240,16 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('Sending data failed:', err);
     }
   };
+
+    const getCurrentRouteName = () => {
+    try {
+      const state = navigation.getState();
+      return state.routes[state.index]?.name || '';
+    } catch (error) {
+      console.error('Error getting current route name:', error);
+      return '';
+    }
+  }; 
  
   const resetStoredData = async () => {
     try {
@@ -270,7 +282,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
   const resetIfNewDay = useCallback(async () => {
     const today = getLogDate();
     const lastReset = await AsyncStorage.getItem('lastResetDate');
-
+ 
     console.log('Today:', today);
     console.log('Last Reset:', lastReset);
  
@@ -447,51 +459,87 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.bottomPadding} />
       </ScrollView>
  
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
                   <View style={styles.bottomNav}>
                     <TouchableOpacity
-                      style={styles.navItem}
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+                      ]}
                       onPress={() => navigation.navigate('ReminderScreen')}
                     >
-                      <Ionicons name="time-outline" size={24} color="#666" />
+                      <Ionicons 
+                        name="time-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                      />
                     </TouchableOpacity>
-                 
+            
                     <TouchableOpacity
-                      style={styles.navItem}
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+                      ]}
                       onPress={() => navigation.navigate('ProgressTrackerScreen')}
                     >
-                      <Ionicons name="stats-chart-outline" size={24} color="#666" />
+                      <Ionicons 
+                        name="stats-chart-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                      />
                     </TouchableOpacity>
-                 
+            
                     <TouchableOpacity
-                      style={styles.navItem}
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+                      ]}
                       onPress={() => navigation.navigate('HomeScreen')}
                     >
-                      <Ionicons name="home" size={24} color="#8B7CF6" />
+                      <Ionicons 
+                        name="home" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                      />
                     </TouchableOpacity>
-                 
+            
                     <TouchableOpacity
-                      style={styles.navItem}
-                      onPress={() => navigation.navigate('DailyHealthScreen', {
-                        mealType: "breakfast", // Default to breakfast for editing
-                        mealData: defaultMealData(), // Pass the current
-                      })}
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+                      ]}
+                      // onPress={() => navigation.navigate('DailyHealthScreen')}
                     >
-                      <Ionicons name="create-outline" size={24} color="#666" />
+                      <Ionicons 
+                        name="create-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                      />
                     </TouchableOpacity>
+            
                     <TouchableOpacity
-                      style={styles.navItem}
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+                      ]}
                       onPress={() => navigation.navigate('UserProfileScreen')}
                     >
-                      <Ionicons name="person-outline" size={24} color="#666" />
+                      <Ionicons 
+                        name="person-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                      />
                     </TouchableOpacity>
                   </View>
-    </SafeAreaView>
+                </SafeAreaView>
   );
 };
  
  
 const styles = StyleSheet.create({
+  activeNavItem: {
+    opacity: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',
@@ -686,4 +734,5 @@ const styles = StyleSheet.create({
 });
  
 export default DailyHealthScreen;
+ 
  

@@ -35,6 +35,11 @@ export default function Register2() {
   const [health, setHealth] = useState('元気');
   const [steps, setSteps] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
+  const [sleepTime, setSleepTime] = useState('');
+  const [wakeTime, setWakeTime] = useState('');
+  const [waterIntake, setWaterIntake] = useState('');
+
+
 
    const healthOptions = [
     { label: '元気', image: require('../assets/rabbit.png') },
@@ -51,6 +56,9 @@ export default function Register2() {
       health,
       steps: steps === '' ? 0 : parseInt(steps),
       goalWeight: goalWeight === '' ? 0 : parseInt(goalWeight),
+      sleepTime,
+      wakeTime,
+      waterIntake: waterIntake === '' ? 0 : parseInt(waterIntake),
     };
 
     try {
@@ -109,7 +117,9 @@ export default function Register2() {
         </View>
       </View>
 
-      {/* 目標 */}
+      {/* 1段目：目標と目標体重 */}
+  <View style={styles.row}>
+    <View style={styles.half}>
       <Text style={styles.label}>目標</Text>
       <View style={styles.pickerContainer}>
         <Picker
@@ -125,38 +135,89 @@ export default function Register2() {
           <Picker.Item label="健康維持したい" value="健康維持したい" />
         </Picker>
       </View>
+    </View>
 
-      {/* 目標歩数・kg数 */}
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <Text style={styles.label}>目標歩数</Text>
-          <View style={styles.inputWithUnit}>
-            <TextInput
-              style={styles.inputInner}
-              placeholder=""
-              placeholderTextColor="#000"
-              keyboardType="numeric"
-              value={steps}
-              onChangeText={setSteps}
-            />
-            <Text style={styles.unitInside}>cm</Text>
-          </View>
-        </View>
-        <View style={styles.half}>
-          <Text style={styles.label}>目標体重</Text>
-          <View style={styles.inputWithUnit}>
-            <TextInput
-              style={styles.inputInner}
-              placeholder=""
-              placeholderTextColor="#000"
-              keyboardType="numeric"
-              value={goalWeight}
-              onChangeText={setGoalWeight}
-            />
-            <Text style={styles.unitInside}>kg</Text>
-          </View>
+      <View style={styles.half}>
+        <Text style={styles.label}>目標体重</Text>
+        <View style={styles.inputWithUnit}>
+          <TextInput
+            style={styles.inputInner}
+            placeholder=""
+            placeholderTextColor="#000"
+            keyboardType="numeric"
+            value={goalWeight}
+            onChangeText={setGoalWeight}
+          />
+          <Text style={styles.unitInside}>kg</Text>
         </View>
       </View>
+    </View>
+
+    {/* 2段目：目標歩数と水分摂取 */}
+    <View style={styles.row}>
+      <View style={styles.half}>
+        <Text style={styles.label}>目標歩数</Text>
+        <View style={styles.inputWithUnit}>
+          <TextInput
+            style={styles.inputInner}
+            placeholder=""
+            placeholderTextColor="#000"
+            keyboardType="numeric"
+            value={steps}
+            onChangeText={setSteps}
+          />
+          <Text style={styles.unitInside}>歩</Text>
+        </View>
+      </View>
+
+      <View style={styles.half}>
+        <Text style={styles.label}>水分摂取</Text>
+        <View style={styles.inputWithUnit}>
+          <TextInput
+            style={styles.inputInner}
+            placeholder=""
+            placeholderTextColor="#000"
+            keyboardType="numeric"
+            value={waterIntake}
+            onChangeText={setWaterIntake}
+          />
+          <Text style={styles.unitInside}>ml</Text>
+        </View>
+      </View>
+    </View>
+
+
+        {/* 睡眠・起床時間（別 row） */}
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Text style={styles.label}>就寝時間</Text>
+            <View style={styles.inputWithUnit}>
+            <TextInput
+              style={styles.inputInner}
+              placeholder=""
+              placeholderTextColor="#000"
+              value={sleepTime}
+              onChangeText={setSleepTime}
+            />
+            <Text style={styles.unitInside}>am</Text>
+          </View>
+          </View>
+          <View style={styles.half}>
+            <Text style={styles.label}>起床時間</Text>
+            <View style={styles.inputWithUnit}>
+            <TextInput
+              style={styles.inputInner}
+              placeholder=""
+              placeholderTextColor="#000"
+              value={wakeTime}
+              onChangeText={setWakeTime}
+            />
+            <Text style={styles.unitInside}>pm</Text>
+          </View>
+        </View>
+        </View>
+      
+
 
       {/* 健康状態 */}
       <Text style={[styles.label, { marginTop: 20 }]}>今の健康状態</Text>
@@ -245,14 +306,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    marginBottom: 35,
+     marginBottom: 8, 
     height: Platform.OS === 'ios' ? 50 : 48,
     justifyContent: 'center',
     paddingHorizontal: Platform.OS === 'ios' ? 6 : 0,
     overflow: 'hidden',
   },
   picker: {
-    marginBottom:35,
     height: Platform.OS === 'ios' ? 180 : 48,
     width: '100%',
   },
@@ -281,13 +341,13 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   button: {
-    backgroundColor: '#CFC6FF',
+    backgroundColor: '#8B7CF6',
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
   },
   buttonText: {
-    color: 'black',
+    color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },

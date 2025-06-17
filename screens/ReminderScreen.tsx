@@ -24,7 +24,15 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
   const [waterReminderActive, setWaterReminderActive] = useState(true);
   const [eyeReminderActive, setEyeReminderActive] = useState(true);
 
-  
+   const getCurrentRouteName = () => {
+    try {
+      const state = navigation.getState();
+      return state.routes[state.index]?.name || '';
+    } catch (error) {
+      console.error('Error getting current route name:', error);
+      return '';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,7 +64,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* 目の疲れリマインド */}
         <View style={styles.reminderBox}>
-          <Text style={styles.reminderText}>目の疲れリマインド</Text>
+          <Text style={styles.reminderText}>就寝時間リマインド</Text>
           <TouchableOpacity
             style={[
               styles.toggleSwitch,
@@ -74,48 +82,84 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
 
-    yang bagian ini nya juga bukan hanya homescreen nya yang berwarna ini #8B7CF6 tetapi saat di tekan yang lainnya warna itu yang akan berubah      {/* Bottom Navigation */}
+     {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
             <View style={styles.bottomNav}>
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('ReminderScreen')}
               >
-                <Ionicons name="time-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="time-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('ProgressTrackerScreen')}
               >
-                <Ionicons name="stats-chart-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="stats-chart-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('HomeScreen')}
               >
-                <Ionicons name="home" size={24} color="#8B7CF6" />
+                <Ionicons 
+                  name="home" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
-           
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('DailyHealthScreen')}
               >
-                <Ionicons name="create-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="create-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
+      
               <TouchableOpacity
-                style={styles.navItem}
+                style={[
+                  styles.navItem,
+                  getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+                ]}
                 onPress={() => navigation.navigate('UserProfileScreen')}
               >
-                <Ionicons name="person-outline" size={24} color="#666" />
+                <Ionicons 
+                  name="person-outline" 
+                  size={24} 
+                  color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                />
               </TouchableOpacity>
             </View>
-
-    </SafeAreaView>
+          </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',

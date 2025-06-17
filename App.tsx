@@ -7,7 +7,7 @@ import { RootStackParamList } from './types';
  
 // Import các màn hình
 import IndexLogin from './screens/IndexLogin';
-import VitualPetLogin from './screens/VirtualPetLogin';
+import VirtualPetLogin from './screens/VirtualPetLogin';
 import RegisterScreen from './screens/RegisterScreen';
 import NextRegisterScreen from './screens/NextRegisterScreen';
 import ChoosePetScreen from './screens/ChoosePetScreen';
@@ -31,67 +31,67 @@ export default function App() {
             <Stack.Screen
               name="IndexLogin"
               component={IndexLogin}
-              options={{ title: 'ようこそ' }}
+                options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="VitualPetLogin"
-              component={VitualPetLogin}
-              options={{ title: 'ログイン' }}
+              name="VirtualPetLogin"
+              component={VirtualPetLogin}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="RegisterScreen"
               component={RegisterScreen}
-              options={{ title: 'ユーザー登録' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="NextRegisterScreen"
               component={NextRegisterScreen}
-              options={{ title: 'ユーザー登録' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ChoosePetScreen"
               component={ChoosePetScreen}
-              options={{ title: 'ペット選択' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="LastRegisterScreen"
               component={LastRegisterScreen}
-              options={{ title: 'ユーザー登録' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="HomeScreen"
               component={HomeScreen}
-              options={{ title: 'ホーム画面' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ReminderScreen"
               component={ReminderScreen}
-              options={{ title: 'リマインダー' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="ProgressTrackerScreen"
               component={ProgressTrackerScreen}
-              options={{ title: '進捗トラッカー' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="DailyHealthScreen"
               component={DailyHealthScreen}
-              options={{ title: '健康管理' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="UserProfileScreen"
               component={UserProfileScreen}
-              options={{ title: 'ユーザープロフィール' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="GoalSettingScreen"
               component={GoalSettingScreen}
-              options={{ title: '目標設定画面' }}
+               options={{ headerShown: false }}
             />
             <Stack.Screen
               name="SelectFoodScreen"
               component={SelectFoodScreen}
-              options={{ title: '食品選択画面' }}
+               options={{ headerShown: false }}
             />
           </Stack.Navigator>
         </NavigationContainer>

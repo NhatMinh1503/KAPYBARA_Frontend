@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types'
+import type { RootStackParamList } from '../types';
 
-
-// Definisikan tipe props yang menerima navigation
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
 type Props = {
@@ -15,14 +13,38 @@ type Props = {
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [emailName, setEmailName] = useState('');
   const [password, setPassword] = useState('');
+  const passwordInputRef = useRef<TextInput>(null);
 
   const handleLogin = async () => {
     const fullEmail = `${emailName}@gmail.com`;
-    // xử lý đăng nhập ở đây
 
     const finalData = {
       email: fullEmail,
       password,
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to register!');
+      }
+
+      const data = await response.json();
+      await AsyncStorage.setItem('token', data.token);
+
+      Alert.alert('Login success!');
+      navigation.navigate('HomeScreen');
+    } catch (error) {
+      if (error instanceof Error) {
+        Alert.alert('エラー', error.message);
+      } else {
+        Alert.alert('エラー', '予期しないエラーが発生しました');
+      }
     }
 
     try{
@@ -61,20 +83,22 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.emailInput}
           value={emailName}
           onChangeText={setEmailName}
-          placeholder="youremail@gmail.com"
-
+          placeholder=""
+          returnKeyType="next"
+          onSubmitEditing={() => passwordInputRef.current?.focus()}
         />
       </View>
 
       <Text style={styles.label}>パスワード</Text>
       <TextInput
+        ref={passwordInputRef}
         style={styles.input}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        placeholder="password"
+        placeholder=""
         returnKeyType="done"
-        onSubmitEditing={handleLogin} 
+        onSubmitEditing={handleLogin}
       />
 
       <TouchableOpacity>
@@ -83,9 +107,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton} onPress={() => {
-        handleLogin();
-      }}>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>ログインする</Text>
       </TouchableOpacity>
     </View>
