@@ -17,7 +17,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogin = async () => {
     const fullEmail = `${emailName}@gmail.com`;
-    console.log('Logging in with:', fullEmail, password);
 
     const finalData = {
       email: fullEmail,
@@ -47,6 +46,31 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         Alert.alert('エラー', '予期しないエラーが発生しました');
       }
     }
+
+    try{
+          const response = await fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(finalData),
+          });
+    
+          const data = await response.json();
+          if(response.ok){
+            await AsyncStorage.setItem('token', data.token);
+            await AsyncStorage.setItem('user_id', data.user_id.toString());
+            console.log(data.user_id)
+            Alert.alert('Login success!');
+            navigation.navigate('HomeScreen');
+          } else{
+            console.log('Login failed!');
+          }
+        } catch (error) {
+            if (error instanceof Error) {
+              Alert.alert('エラー', error.message);
+            } else {
+              Alert.alert('エラー', '予期しないエラーが発生しました');
+            }
+        }
   };
 
   return (

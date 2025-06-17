@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState,  useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,32 @@ import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
  
-// Import types from your types file
-import { RootStackParamList, MealType, MealData, FoodItem } from '../types';
+ 
+// ---------- Type Definitions ----------
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+ 
+type RootStackParamList = {
+  IndexLogin: undefined;
+  VirtualPetLogin: undefined;
+  RegisterScreen: undefined;
+  NextRegisterScreen: undefined;
+  ChoosePetScreen: undefined;
+  LastRegisterScreen: undefined;
+  HomeScreen: undefined;
+  ReminderScreen: undefined;
+  ProgressTrackerScreen: undefined;
+  DailyHealthScreen: {
+    mealType?: MealType;
+    mealData?: MealData;
+  };
+  UserProfileScreen: undefined;
+  SelectFoodScreen: {
+    mealType: MealType;
+    onSave: (data: MealData) => void;
+  };
+};
  
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'DailyHealthScreen'>;
 type DailyHealthRouteProp = RouteProp<RootStackParamList, 'DailyHealthScreen'>;
@@ -27,37 +50,46 @@ interface Props {
   route: DailyHealthRouteProp;
 }
  
-interface WaterIntake {
-  amount: number;
-  goal: number;
+interface FoodItem {
+  name: string;
+  calories: number;
 }
  
-interface StepsData {
-  steps: number;
-  goal: number;
+interface MealData {
+  fat: number;
+  carbs: number;
+  protein: number;
+  percentage: number;
+  totalCalories: number;
+  foods: FoodItem[];
 }
+ 
 
-// Extended FoodItem interface to include quantity
-interface ExtendedFoodItem extends FoodItem {
-  quantity: number;
-  originalCalories: number; // Store original calories per unit
-}
+
+// ---------- Utility Functions ----------
+const getLogDate = (): string => {
+  const now = new Date();
+  if (now.getHours() < 3) now.setDate(now.getDate() - 1);
+  return now.toISOString().split('T')[0];
+};
  
+const defaultMealData = (): MealData => ({
+  fat: 0,
+  carbs: 0,
+  protein: 0,
+  percentage: 0,
+  totalCalories: 0,
+  foods: [],
+});
+ 
+// ---------- Main Component ----------
 const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
-  const [waterIntake, setWaterIntake] = useState('');
-  const [steps, setSteps] = useState('');
   const isFocused = useIsFocused();
  
-  // Default meal data factory function
-  const defaultMealData = (): MealData => ({
-    fat: 0,
-    carbs: 0,
-    protein: 0,
-    percentage: 0,
-    totalCalories: 0,
-    foods: [],
-  });
- 
+  const [waterIntake, setWaterIntake] = useState('');
+  const [remainingWater, setRemainingWater] = useState(0);
+  const [remainingSteps, setRemainingSteps] = useState(0);
+  const [steps, setSteps] = useState('');
   const [meals, setMeals] = useState<Record<MealType, MealData>>({
     breakfast: defaultMealData(),
     lunch: defaultMealData(),
@@ -65,383 +97,287 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     snack: defaultMealData(),
   });
  
-  useEffect(() => {
-    if (isFocused && route.params?.mealType && route.params?.mealData) {
-      const { mealType, mealData } = route.params;
-      handleMealSave(mealType, mealData);
+  const fetchGoals = useCallback(async () => {
+    try {
+      const userId = await AsyncStorage.getItem('user_id');
+      if (!userId) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
  
-      // Clear the params after handling
-      navigation.setParams({
-        mealType: undefined,
-        mealData: undefined,
-      });
+      const response = await fetch(`http://localhost:3000/goals/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch water goal');
+ 
+      const data = await response.json();
+ 
+      const goal = parseInt(data.waterGoal);
+      if (isNaN(goal)) throw new Error('Invalid water goal');
+ 
+      const steps = parseInt(data.steps);
+      if (isNaN(steps)) throw new Error('Invalid steps goal');
+ 
+      setRemainingWater(goal);
+      setRemainingSteps(steps);
+      await AsyncStorage.setItem('@remainingWater', goal.toString());
+      await AsyncStorage.setItem('@remainingSteps', steps.toString());
+    } catch (error) {
+      console.error(error);
+      Alert.alert('エラー', '水分摂取量の目標を取得できませんでした。');
     }
-  }, [isFocused, route.params, navigation]);
+  }, []);
  
-  const handleAddMeal = (mealType: keyof typeof meals) => {
+  const handleWaterIntake = useCallback(async () => {
+    const intake = parseInt(waterIntake);
+    if (isNaN(intake) || intake < 0) {
+      return Alert.alert('無効な水分摂取量', '正しい数値を入力してください。');
+    }
+ 
+    const currentIntake = parseInt(await AsyncStorage.getItem('@waterIntake') ?? '0');
+    const newIntake = currentIntake + intake;
+ 
+    await AsyncStorage.setItem('@waterIntake', newIntake.toString());
+    setWaterIntake('');
+ 
+    const remaining = parseInt(await AsyncStorage.getItem('@remainingWater') ?? '0');
+    const newRemaining = remaining - intake;
+    setRemainingWater(newRemaining);
+    await AsyncStorage.setItem('@remainingWater', newRemaining.toString());
+  }, [waterIntake]);
+ 
+  const handleStepsIntake = useCallback(async () => {
+    const intake = parseInt(steps);
+    if (isNaN(intake) || intake < 0) {
+      return Alert.alert('無効な歩数', '正しい数値を入力してください。');
+    }
+ 
+    const currentIntake = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
+    const newIntake = currentIntake + intake;
+ 
+    await AsyncStorage.setItem('@stepsIntake', newIntake.toString());
+    setSteps('');
+ 
+    const remaining = parseInt(await AsyncStorage.getItem('@remainingSteps') ?? '0');
+    const newRemaining = remaining - intake;
+    setRemainingSteps(newRemaining);
+ 
+    await AsyncStorage.setItem('@remainingSteps', newRemaining.toString());
+  }, [steps]);
+ 
+  const handleMealSave = useCallback((mealType: MealType, newData: MealData) => {
+    setMeals(prev => {
+      const existing = prev[mealType];
+      const updatedFoods = [...existing.foods, ...newData.foods];
+ 
+      const fat = existing.fat + newData.fat;
+      const carbs = existing.carbs + newData.carbs;
+      const protein = existing.protein + newData.protein;
+      const totalCalories = existing.totalCalories + newData.totalCalories;
+      const percentage = Math.round(((fat + carbs + protein) / 100) * 100);
+ 
+      return {
+        ...prev,
+        [mealType]: { fat, carbs, protein, totalCalories, percentage, foods: updatedFoods },
+      };
+    });
+  }, []);
+ 
+  const handleAddMeal = (mealType: MealType) => {
     navigation.navigate('SelectFoodScreen', {
       mealType,
-      onSave: (data: MealData) => handleMealSave(mealType, data),
+      onSave: data => handleMealSave(mealType, data),
     });
-  };
- 
-  const handleMealSave = (mealType: keyof typeof meals, newdata: MealData) => {
-    setMeals((prevMeals) => {
-      const existingFoods = prevMeals[mealType].foods;
-      
-      // Convert new foods to extended format with quantity and original calories
-      const extendedNewFoods = newdata.foods.map(food => ({
-        ...food,
-        quantity: 1,
-        originalCalories: food.calories
-      }));
-      
-      const updatedFoods = [...existingFoods, ...extendedNewFoods];
- 
-      const updateFat = prevMeals[mealType].fat + newdata.fat;
-      const updateCarbs = prevMeals[mealType].carbs + newdata.carbs;
-      const updateProtein = prevMeals[mealType].protein + newdata.protein;
-      const updateTotalCalories = prevMeals[mealType].totalCalories + newdata.totalCalories;
- 
-      const updatePercentage = Math.round(
-        ((updateFat + updateCarbs + updateProtein) / 100) * 100
-      );
- 
-      return {
-        ...prevMeals,
-        [mealType]: {
-          fat: updateFat,
-          carbs: updateCarbs,
-          protein: updateProtein,
-          percentage: updatePercentage,
-          totalCalories: updateTotalCalories,
-          foods: updatedFoods,
-        },
-      };
-    });
-  };
-
-  // Function to update food quantity
-  const updateFoodQuantity = (mealType: keyof typeof meals, foodIndex: number, newQuantity: number) => {
-    if (newQuantity <= 0) return;
-
-    setMeals((prevMeals) => {
-      const currentMeal = prevMeals[mealType];
-      const updatedFoods = [...currentMeal.foods];
-      const food = updatedFoods[foodIndex] as ExtendedFoodItem;
-      
-      // Calculate difference in calories
-      const oldTotalCalories = food.calories;
-      const newTotalCalories = food.originalCalories * newQuantity;
-      const caloriesDifference = newTotalCalories - oldTotalCalories;
-      
-      // Update food item
-      updatedFoods[foodIndex] = {
-        ...food,
-        quantity: newQuantity,
-        calories: newTotalCalories
-      };
-
-      // Recalculate meal totals
-      const newTotalMealCalories = currentMeal.totalCalories + caloriesDifference;
-      
-      return {
-        ...prevMeals,
-        [mealType]: {
-          ...currentMeal,
-          totalCalories: newTotalMealCalories,
-          foods: updatedFoods,
-        },
-      };
-    });
-  };
-
-  // Function to delete food item
-  const deleteFoodItem = (mealType: keyof typeof meals, foodIndex: number) => {
-    Alert.alert(
-      '食品を削除',
-      'この食品を削除しますか？',
-      [
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-        },
-        {
-          text: '削除',
-          style: 'destructive',
-          onPress: () => {
-            setMeals((prevMeals) => {
-              const currentMeal = prevMeals[mealType];
-              const updatedFoods = [...currentMeal.foods];
-              const foodToDelete = updatedFoods[foodIndex];
-              
-              if (!foodToDelete) {
-                console.log('Food item not found at index:', foodIndex);
-                return prevMeals;
-              }
-              
-              // Remove the food item
-              updatedFoods.splice(foodIndex, 1);
-              
-              // Recalculate all nutritional values based on remaining foods
-              const newTotals = updatedFoods.reduce(
-                (acc, food) => {
-                  // Assuming we need to calculate nutrition from remaining foods
-                  // Since we don't have individual nutrition data, we'll proportionally reduce
-                  acc.totalCalories += food.calories;
-                  return acc;
-                },
-                { fat: 0, carbs: 0, protein: 0, totalCalories: 0 }
-              );
-
-              // Calculate proportional reduction for fat, carbs, protein
-              const calorieRatio = updatedFoods.length > 0 ? newTotals.totalCalories / currentMeal.totalCalories : 0;
-              
-              const newFat = Math.round(currentMeal.fat * calorieRatio);
-              const newCarbs = Math.round(currentMeal.carbs * calorieRatio);
-              const newProtein = Math.round(currentMeal.protein * calorieRatio);
-              
-              const newPercentage = updatedFoods.length > 0 ? 
-                Math.round(((newFat + newCarbs + newProtein) / 100) * 100) : 0;
-              
-              console.log(`Deleting food item: ${foodToDelete.name} from ${mealType}`);
-              console.log(`New totals - Calories: ${newTotals.totalCalories}, Foods count: ${updatedFoods.length}`);
-              
-              return {
-                ...prevMeals,
-                [mealType]: {
-                  fat: newFat,
-                  carbs: newCarbs,
-                  protein: newProtein,
-                  percentage: newPercentage,
-                  totalCalories: newTotals.totalCalories,
-                  foods: updatedFoods,
-                },
-              };
-            });
-          },
-        },
-      ]
-    );
   };
  
   const calculateTotalNutrition = () => {
-    const total = Object.values(meals).reduce(
-      (acc, meal) => {
-        acc.fat += meal.fat;
-        acc.carbs += meal.carbs;
-        acc.protein += meal.protein;
-        acc.totalCalories += meal.totalCalories;
-        return acc;
-      },
-      { fat: 0, carbs: 0, protein: 0, totalCalories: 0 }
-    );
+    const total = Object.values(meals).reduce((acc, meal) => {
+      acc.fat += meal.fat;
+      acc.carbs += meal.carbs;
+      acc.protein += meal.protein;
+      acc.totalCalories += meal.totalCalories;
+      return acc;
+    }, { fat: 0, carbs: 0, protein: 0, totalCalories: 0 });
  
-    const percentage = Math.round(
-      ((total.fat + total.carbs + total.protein) / 100) * 100
-    );
- 
+    const percentage = Math.round(((total.fat + total.carbs + total.protein) / 100) * 100);
     return { ...total, percentage };
   };
  
-  const total = calculateTotalNutrition();
+  const saveTotalCalories = async () => {
+    const total = calculateTotalNutrition();
+    try{
+      await AsyncStorage.setItem('@calories', await total.totalCalories.toString());
+    }catch(err){
+      console.error('Error to save calories to Storage', err);
+    }
+  }
  
-  const getStorageData = () => {
-    const logicalDate = getLogDate();
-    return `@meals:${logicalDate}`;
+  const saveMealsToStorage = async () => {
+    try {
+      saveTotalCalories();
+      const key = `@meals:${getLogDate()}`;
+      await AsyncStorage.setItem(key, JSON.stringify(meals));
+    } catch (err) {
+      console.error('Failed to save meals:', err);
+    }
   };
  
-  // Function to load meals from AsyncStorage
-  useEffect(() => {
-    const loadMeals = async () => {
-      try {
-        const storedData = getStorageData();
-        const storedMeals = await AsyncStorage.getItem(storedData);
-        if (storedMeals) {
-          const parsedMeals = JSON.parse(storedMeals);
-          
-          // Ensure backward compatibility by adding quantity and originalCalories to existing foods
-          Object.keys(parsedMeals).forEach(mealType => {
-            parsedMeals[mealType].foods = parsedMeals[mealType].foods.map((food: any) => ({
-              ...food,
-              quantity: food.quantity || 1,
-              originalCalories: food.originalCalories || food.calories
-            }));
-          });
-          
-          setMeals(parsedMeals);
-        }
-      } catch (error) {
-        console.error('Failed to load meals from storage:', error);
-      }
-    };
-    loadMeals();
-  }, []);
- 
-  // Function to save meals to AsyncStorage
-  useEffect(() => {
-    const saveMeals = async () => {
-      try {
-        const storedData = getStorageData();
-        await AsyncStorage.setItem(storedData, JSON.stringify(meals));
-      } catch (error) {
-        console.error('Failed to save meals to storage:', error);
-      }
-    };
-    saveMeals();
-  }, [meals]);
- 
-  // Function to reset stored data (daily)
-  const resetStoredData = async () => {
-    await sendCaloriesToBackend(total.totalCalories);
+  const loadMealsFromStorage = async () => {
     try {
-      const storedData = getStorageData();
-      await AsyncStorage.removeItem(storedData);
+      const key = `@meals:${getLogDate()}`;
+      const stored = await AsyncStorage.getItem(key);
+      if (stored) setMeals(JSON.parse(stored));
+    } catch (err) {
+      console.error('Failed to load meals:', err);
+    }
+  };
+ 
+  const sendDataToBackend = async (totalCalories: number, water: number, steps: number) => {
+    try {
+      const user_id = await AsyncStorage.getItem('user_id');
+      const log_date = getLogDate();
+      await fetch('http://localhost:3000/daily-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id, log_date, calories: totalCalories, waterIntake: water, steps: steps }),
+      });
+    } catch (err) {
+      console.error('Sending data failed:', err);
+    }
+  };
+
+    const getCurrentRouteName = () => {
+    try {
+      const state = navigation.getState();
+      return state.routes[state.index]?.name || '';
+    } catch (error) {
+      console.error('Error getting current route name:', error);
+      return '';
+    }
+  }; 
+ 
+  const resetStoredData = async () => {
+    try {
+      // const total = calculateTotalNutrition();
+      const calories = parseInt(await AsyncStorage.getItem('@calories') ?? '0');
+      const water = parseInt(await AsyncStorage.getItem('@waterIntake') ?? '0');
+      const steps = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
+ 
+      await sendDataToBackend(calories, water, steps);
+ 
+      const key = `@meals:${getLogDate()}`;
+      await AsyncStorage.removeItem(key);
+      await AsyncStorage.setItem('@waterIntake', '0');
+      await AsyncStorage.setItem('@stepsIntake', '0');
+      await AsyncStorage.setItem('@calories', '0');
+ 
       setMeals({
         breakfast: defaultMealData(),
         lunch: defaultMealData(),
         dinner: defaultMealData(),
         snack: defaultMealData(),
       });
+ 
       Alert.alert('データがリセットされました');
-    } catch (error) {
-      console.error('Failed to reset stored data:', error);
+    } catch (err) {
+      console.error('Failed to reset data:', err);
     }
   };
  
-  // Function to send calories to backend
-  const sendCaloriesToBackend = async (totalCalories: number) => {
-    const storedUserId = await AsyncStorage.getItem('user_id');
-    const log_date = getLogDate();
-    try {
-      const response = await fetch('http://localhost:3000/daily-calories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ calories: totalCalories, user_id: storedUserId, log_date }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to send calories to backend');
-      }
-    } catch (error) {
-      console.error('Error sending calories to backend:', error);
+  const resetIfNewDay = useCallback(async () => {
+    const today = getLogDate();
+    const lastReset = await AsyncStorage.getItem('lastResetDate');
+ 
+    console.log('Today:', today);
+    console.log('Last Reset:', lastReset);
+ 
+    if (!lastReset || lastReset !== today) {
+      await fetchGoals();
+      await resetStoredData();
+      await AsyncStorage.setItem('lastResetDate', today);
     }
-  };
- 
-  // Function to set time to send data to backend
-  function getLogDate() {
-    const now = new Date();
-    const hour = now.getHours();
- 
-    const logicalDate = new Date(now);
-    if (hour < 3) {
-      logicalDate.setDate(now.getDate() - 1); // 前日のデータを送信
-    }
- 
-    return logicalDate.toISOString().split('T')[0]; // YYYY-MM-DD形式で返す
-  }
- 
-  // Function to reset all data in new day
-  const resetIfNewDay = async () => {
-    try {
-      const today = getLogDate();
-      const lastResetDate = await AsyncStorage.getItem('lastResetDate');
-      if (lastResetDate !== today) {
-        await resetStoredData();
-        await AsyncStorage.setItem('lastResetDate', today);
-      }
-    } catch (error) {
-      console.error('Failed to reset data:', error);
-    }
-  };
- 
-  useEffect(() => {
-    resetIfNewDay();
   }, []);
  
+  // ---------- Effects ----------
+  useEffect(() => {
+    resetIfNewDay();
+    loadMealsFromStorage();
+  }, []);
+ 
+  useEffect(() => {
+    saveMealsToStorage();
+  }, [meals]);
+ 
+  useEffect(() => {
+    if (isFocused && route.params?.mealType && route.params?.mealData) {
+      handleMealSave(route.params.mealType, route.params.mealData);
+      navigation.setParams({ mealType: undefined, mealData: undefined });
+    }
+  }, [isFocused, route.params]);
+ 
+  useFocusEffect(
+    useCallback(() => {
+      const loadRemainingWater = async () => {
+        const value = await AsyncStorage.getItem('@remainingWater');
+        if(value != null){
+          setRemainingWater(parseInt(value));
+        }
+      };
+ 
+      loadRemainingWater();
+    }, [])
+  );
+ 
+    useFocusEffect(
+    useCallback(() => {
+      const loadRemainingSteps = async () => {
+        const value = await AsyncStorage.getItem('@remainingSteps');
+        if(value != null){
+          setRemainingSteps(parseInt(value));
+        }
+      };
+ 
+      loadRemainingSteps();
+    }, [])
+  );
+ 
+  const total = calculateTotalNutrition();
+ 
   const renderMealSection = (mealKey: keyof typeof meals, mealData: MealData) => {
-    const mealNameMap = {
-      breakfast: '朝食',
-      lunch: '昼食',
-      dinner: '夕食',
-      snack: '間食',
-    };
-    const mealName = mealNameMap[mealKey];
- 
-    const hasFoods = mealData.foods.length > 0;
- 
+  const mealNameMap = {
+    breakfast: '朝食',
+    lunch: '昼食',
+    dinner: '夕食',
+    snack: '間食',
+  };
+  const mealName = mealNameMap[mealKey];
+   
     return (
       <View key={mealKey}>
-        {hasFoods ? (
-          <View>
-            {/* Meal name with underline when has data */}
+          <View>          
+            {/* Meal name with underline */}
             <View style={styles.mealRowWithData}>
               <Text style={styles.mealName}>{mealName}</Text>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={() => handleAddMeal(mealKey)}>
                 <Text style={styles.addButtonText}>+</Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
             </View>
- 
+           
             {/* Food items */}
-            {mealData.foods.map((food, index) => {
-              const extendedFood = food as ExtendedFoodItem;
-              return (
-                <View key={index} style={styles.foodItemRow}>
-                  <View style={styles.foodItemInfo}>
-                    <Text style={styles.foodItemName}>{food.name}</Text>
-                    <Text style={styles.foodItemCalories}>{food.calories} kcal</Text>
-                  </View>
-                  
-                  <View style={styles.foodItemControls}>
-                    {/* Quantity controls */}
-                    <View style={styles.quantityContainer}>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => updateFoodQuantity(mealKey, index, (extendedFood.quantity || 1) - 1)}
-                        disabled={(extendedFood.quantity || 1) <= 1}
-                      >
-                        <Text style={[
-                          styles.quantityButtonText,
-                          (extendedFood.quantity || 1) <= 1 && styles.quantityButtonDisabled
-                        ]}>-</Text>
-                      </TouchableOpacity>
-                      
-                      <Text style={styles.quantityText}>{extendedFood.quantity || 1}</Text>
-                      
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() => updateFoodQuantity(mealKey, index, (extendedFood.quantity || 1) + 1)}
-                      >
-                        <Text style={styles.quantityButtonText}>+</Text>
-                      </TouchableOpacity>
-                    </View>
-                    
-                    {/* Delete button */}
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => deleteFoodItem(mealKey, index)}
-                    >
-                      <Ionicons name="trash-outline" size={16} color="#ff4444" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
+            {mealData.foods.map((food, index) => (
+              <View key={index} style={styles.foodItemRow}>
+                <Text style={styles.foodItemName}>{food.name}</Text>
+                <Text style={styles.foodItemCalories}>{food.calories}</Text>
+              </View>
+            ))}
           </View>
-        ) : (
-          /* Empty meal row */
+       
           <View style={styles.mealRowEmpty}>
             <Text style={styles.mealName}>{mealName}</Text>
             <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => handleAddMeal(mealKey)}>
-              <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
+                style={styles.addButton}
+                onPress={() => handleAddMeal(mealKey)}
+                >
+                <Text style={styles.addButtonText}>+</Text>
+                </TouchableOpacity>
           </View>
-        )}
       </View>
     );
   };
@@ -449,7 +385,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
- 
+     
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Water Intake Section */}
         <View style={styles.section}>
@@ -460,13 +396,14 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
                 style={styles.input}
                 value={waterIntake}
                 onChangeText={setWaterIntake}
+                onSubmitEditing={handleWaterIntake}
                 placeholder=""
                 keyboardType="numeric"
               />
               <Text style={styles.unit}>ml</Text>
             </View>
           </View>
-          <Text style={styles.goalText}>目標まであと 2 ml必要です！</Text>
+          <Text style={styles.goalText}>目標まであと {remainingWater} ml必要です!</Text>
         </View>
  
         {/* Steps Section */}
@@ -478,29 +415,30 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
                 style={styles.input}
                 value={steps}
                 onChangeText={setSteps}
+                onSubmitEditing={handleStepsIntake}
                 placeholder=""
                 keyboardType="numeric"
               />
               <Text style={styles.unit}>歩</Text>
             </View>
           </View>
-          <Text style={styles.goalText}>目標まであと 7歩必要です！</Text>
+          <Text style={styles.goalText}>目標まであと {remainingSteps} 歩必要です！</Text>
         </View>
  
         {/* Meals Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>食事</Text>
- 
+         
           {/* Nutrition Headers */}
           <View style={styles.mealHeader}>
             <Text style={styles.mealHeaderText}>脂質</Text>
-            <Text style={styles.mealHeaderText}>炭水</Text>
-            <Text style={styles.mealHeaderText}>たん質</Text>
+            <Text style={styles.mealHeaderText}> 炭水</Text>
+            <Text style={styles.mealHeaderText}>た質</Text>
             <Text style={styles.mealHeaderText}>摂取%</Text>
             <Text style={styles.mealHeaderText}>カロリー</Text>
           </View>
  
-          {/* Total Nutrition Row */}
+          {/* Total Nutrition Row (only once) */}
           <View style={styles.nutritionValuesRow}>
             <Text style={styles.nutritionValue}>{total.fat}g</Text>
             <Text style={styles.nutritionValue}>{total.carbs}g</Text>
@@ -516,62 +454,96 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
             )}
           </View>
         </View>
- 
+       
         {/* Add some bottom padding for the fixed navigation */}
         <View style={styles.bottomPadding} />
       </ScrollView>
  
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('ReminderScreen')}
-        >
-          <Ionicons name="time-outline" size={24} color="#666" />
-        </TouchableOpacity>
- 
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('ProgressTrackerScreen')}
-        >
-          <Ionicons name="stats-chart-outline" size={24} color="#666" />
-        </TouchableOpacity>
- 
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('HomeScreen')}
-        >
-          <Ionicons name="home" size={24} color="#8B7CF6" />
-        </TouchableOpacity>
- 
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('DailyHealthScreen', {
-            mealType: 'breakfast',
-            mealData: JSON.parse(JSON.stringify(meals.breakfast)),
-          })}
-        >
-          <Ionicons name="create-outline" size={24} color="#666" />
-        </TouchableOpacity>
- 
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('UserProfileScreen')}
-        >
-          <Ionicons name="person-outline" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
+                  <View style={styles.bottomNav}>
+                    <TouchableOpacity
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+                      ]}
+                      onPress={() => navigation.navigate('ReminderScreen')}
+                    >
+                      <Ionicons 
+                        name="time-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                      />
+                    </TouchableOpacity>
+            
+                    <TouchableOpacity
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+                      ]}
+                      onPress={() => navigation.navigate('ProgressTrackerScreen')}
+                    >
+                      <Ionicons 
+                        name="stats-chart-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                      />
+                    </TouchableOpacity>
+            
+                    <TouchableOpacity
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+                      ]}
+                      onPress={() => navigation.navigate('HomeScreen')}
+                    >
+                      <Ionicons 
+                        name="home" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                      />
+                    </TouchableOpacity>
+            
+                    <TouchableOpacity
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+                      ]}
+                      // onPress={() => navigation.navigate('DailyHealthScreen')}
+                    >
+                      <Ionicons 
+                        name="create-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                      />
+                    </TouchableOpacity>
+            
+                    <TouchableOpacity
+                      style={[
+                        styles.navItem,
+                        getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+                      ]}
+                      onPress={() => navigation.navigate('UserProfileScreen')}
+                    >
+                      <Ionicons 
+                        name="person-outline" 
+                        size={24} 
+                        color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </SafeAreaView>
   );
 };
  
+ 
 const styles = StyleSheet.create({
+  activeNavItem: {
+    opacity: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',
-    paddingTop: 20,
   },
-
   scrollView: {
     flex: 1,
   },
@@ -709,62 +681,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  foodItemInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
   foodItemName: {
-    fontSize: 14,
-    color: '#000',
-    marginBottom: 4,
+    fontSize: 12,
+    color: '#666',
+    flex: 1,
   },
   foodItemCalories: {
     fontSize: 12,
     color: '#666',
-  },
-  foodItemControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 6,
-    paddingHorizontal: 4,
-  },
-  quantityButton: {
-    width: 28,
-    height: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 4,
-  },
-  quantityButtonText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
-  },
-  quantityButtonDisabled: {
-    color: '#ccc',
-  },
-  quantityText: {
-    fontSize: 14,
-    color: '#000',
-    minWidth: 24,
-    textAlign: 'center',
-    marginHorizontal: 8,
-  },
-  deleteButton: {
-    padding: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    minWidth: 30,
+    textAlign: 'right',
   },
   reportButton: {
     backgroundColor: '#f8f8f8',
@@ -803,3 +734,5 @@ const styles = StyleSheet.create({
 });
  
 export default DailyHealthScreen;
+ 
+ 
