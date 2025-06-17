@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Button } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notification from 'expo-notifications';
 
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -22,6 +23,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ReminderScreen'>;
 const ReminderScreen: React.FC<Props> = ({ navigation }) => {
   const [waterReminderActive, setWaterReminderActive] = useState(true);
   const [eyeReminderActive, setEyeReminderActive] = useState(true);
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
