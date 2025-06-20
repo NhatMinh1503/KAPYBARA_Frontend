@@ -90,10 +90,10 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
           const data = await response.json();
 
           setGoals({
-            weight: data.goalWeight,
-            steps: data.steps,
-            calories: data.goalCalories,
-            water: data.waterGoal
+            weight: data.goalWeight?.toString() ?? '0',
+            steps: data.steps?.toString() ?? '0',
+            calories: data.goalCalories?.toString() ?? '0',
+            water: data.waterGoal?.toString() ?? '0'
           });
         }
     } catch(err){

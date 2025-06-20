@@ -244,7 +244,7 @@ export default function Register2() {
                 style={styles.inputInner}
                 placeholder="00:00"
                 placeholderTextColor="#999"
-                value={sleepTime}
+                value={wakeupTime}
                 onChangeText={setWakeTime}
               />
               <Text style={styles.unitInside}>{Platform.OS === 'ios' ? 'AM' : ''}</Text>
