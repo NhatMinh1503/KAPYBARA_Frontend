@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Button } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notification from 'expo-notifications';
+import * as Notifications from 'expo-notifications';
 
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -33,6 +33,44 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
       return '';
     }
   };
+
+  useEffect(() => {
+    const setupRemainder = async () =>{
+      const { status } = await Notifications.requestPermissionsAsync();
+      if(status !== 'granted'){
+        alert('通知の許可が必要です！');
+        return;
+      }
+
+      if(Platform.OS === 'ios'){
+        console.log('iOS notification permission granted!');
+      }
+    };
+
+    setupRemainder();
+  }, []);
+
+  useEffect(() => {
+    const scheduleWaterRemainder = async () => {
+      if(!waterReminderActive){
+        await Notifications.cancelAllScheduledNotificationsAsync();
+        return;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '水分補給',
+          body: 'お水を飲みましょう！',
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 120,
+          repeats: true,
+        },
+      });
+    };
+    scheduleWaterRemainder();
+  }, [waterReminderActive]);
 
   return (
     <SafeAreaView style={styles.container}>

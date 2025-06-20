@@ -36,7 +36,7 @@ export default function Register2() {
   const [steps, setSteps] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
   const [sleepTime, setSleepTime] = useState('');
-  const [wakeTime, setWakeTime] = useState('');
+  const [wakeupTime, setWakeTime] = useState('');
   const [waterIntake, setWaterIntake] = useState('');
 
 
@@ -48,6 +48,32 @@ export default function Register2() {
   ];
   
   const handleRegister = async () => {
+    // Number validation
+    if (isNaN(parseInt(weight))) {
+      Alert.alert("入力エラー", "体重を正しく入力してください。");
+      return;
+    }
+
+    if (isNaN(parseInt(height))) {
+      Alert.alert("入力エラー", "身長を正しく入力してください。");
+      return;
+    }
+
+    if (steps !== '' && isNaN(parseInt(steps))) {
+      Alert.alert("入力エラー", "歩数を正しく入力してください。");
+      return;
+    }
+
+    if (goalWeight !== '' && isNaN(parseInt(goalWeight))) {
+      Alert.alert("入力エラー", "目標体重を正しく入力してください。");
+      return;
+    }
+
+    if (waterIntake !== '' && isNaN(parseInt(waterIntake))) {
+      Alert.alert("入力エラー", "水分摂取量を正しく入力してください。");
+      return;
+    }
+
     const fullData = {
       ...userData,
       weight: parseInt(weight) || 0,
@@ -56,9 +82,9 @@ export default function Register2() {
       health,
       steps: steps === '' ? 0 : parseInt(steps),
       goalWeight: goalWeight === '' ? 0 : parseInt(goalWeight),
-      sleepTime,
-      wakeTime,
-      waterIntake: waterIntake === '' ? 0 : parseInt(waterIntake),
+      sleepTime: sleepTime ? `${sleepTime}:00` : null,
+      wakeupTime: wakeupTime ? `${wakeupTime}:00` : null,
+      goalWater: waterIntake === '' ? 0 : parseInt(waterIntake),
     };
 
     try {
@@ -209,7 +235,7 @@ export default function Register2() {
               style={styles.inputInner}
               placeholder=""
               placeholderTextColor="#000"
-              value={wakeTime}
+              value={wakeupTime}
               onChangeText={setWakeTime}
             />
             <Text style={styles.unitInside}>pm</Text>

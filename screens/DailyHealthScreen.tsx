@@ -96,6 +96,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     dinner: defaultMealData(),
     snack: defaultMealData(),
   });
+  const [goalCalories, setGoalCalories] = useState(0);
  
   const fetchGoals = useCallback(async () => {
     try {
@@ -112,11 +113,16 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
  
       const steps = parseInt(data.steps);
       if (isNaN(steps)) throw new Error('Invalid steps goal');
+
+      const goalCalories = parseInt(data.goalCalories);
+      if (isNaN(goalCalories)) throw new Error('Invalid steps goalCalories');
  
       setRemainingWater(goal);
       setRemainingSteps(steps);
+      setGoalCalories(goalCalories);
       await AsyncStorage.setItem('@remainingWater', goal.toString());
       await AsyncStorage.setItem('@remainingSteps', steps.toString());
+      await AsyncStorage.setItem('@goalCalories', goalCalories.toString());
     } catch (error) {
       console.error(error);
       Alert.alert('エラー', '水分摂取量の目標を取得できませんでした。');
@@ -160,7 +166,8 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     await AsyncStorage.setItem('@remainingSteps', newRemaining.toString());
   }, [steps]);
  
-  const handleMealSave = useCallback((mealType: MealType, newData: MealData) => {
+  const handleMealSave = useCallback(async (mealType: MealType, newData: MealData) => {
+    const goalCall = parseInt(await AsyncStorage.getItem('@goalCalories') || '0', 10);
     setMeals(prev => {
       const existing = prev[mealType];
       const updatedFoods = [...existing.foods, ...newData.foods];
@@ -169,7 +176,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       const carbs = existing.carbs + newData.carbs;
       const protein = existing.protein + newData.protein;
       const totalCalories = existing.totalCalories + newData.totalCalories;
-      const percentage = Math.round(((fat + carbs + protein) / 100) * 100);
+      const percentage = Math.round((totalCalories / goalCall) * 100);
  
       return {
         ...prev,
@@ -185,7 +192,7 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   };
  
-  const calculateTotalNutrition = () => {
+  const calculateTotalNutrition =  () => {
     const total = Object.values(meals).reduce((acc, meal) => {
       acc.fat += meal.fat;
       acc.carbs += meal.carbs;
@@ -194,14 +201,14 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       return acc;
     }, { fat: 0, carbs: 0, protein: 0, totalCalories: 0 });
  
-    const percentage = Math.round(((total.fat + total.carbs + total.protein) / 100) * 100);
+    const percentage = Math.round((total.totalCalories / goalCalories) * 100);
     return { ...total, percentage };
   };
  
   const saveTotalCalories = async () => {
     const total = calculateTotalNutrition();
     try{
-      await AsyncStorage.setItem('@calories', await total.totalCalories.toString());
+      await AsyncStorage.setItem('@calories', total.totalCalories.toString());
     }catch(err){
       console.error('Error to save calories to Storage', err);
     }
@@ -253,8 +260,8 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
  
   const resetStoredData = async () => {
     try {
-      // const total = calculateTotalNutrition();
-      const calories = parseInt(await AsyncStorage.getItem('@calories') ?? '0');
+      const total = calculateTotalNutrition();
+      const calories = total.totalCalories;
       const water = parseInt(await AsyncStorage.getItem('@waterIntake') ?? '0');
       const steps = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
  
@@ -335,6 +342,16 @@ const DailyHealthScreen: React.FC<Props> = ({ navigation, route }) => {
       loadRemainingSteps();
     }, [])
   );
+
+  useEffect(() => {
+    const goalCall = async () => {
+      const value = parseInt(await AsyncStorage.getItem('@goalCalories') || '0', 10);
+      setGoalCalories(value);
+    };
+
+    goalCall();
+    
+  })
  
   const total = calculateTotalNutrition();
  

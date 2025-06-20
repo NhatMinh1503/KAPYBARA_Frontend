@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Type definitions
 type RootStackParamList = {
@@ -58,15 +59,47 @@ interface GoalConfig {
 
 // Default goals constant
 const defaultGoals: GoalData = {
-  weight: '60',
-  steps: '10000',
-  calories: '2000',
-  water: '2000',
+  weight: '0',
+  steps: '0',
+  calories: '0',
+  water: '0',
 };
 
 const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
   const [goals, setGoals] = useState<GoalData>(defaultGoals);
   const [hasChanges, setHasChanges] = useState(false);
+  
+
+  //Function to get Goals from database
+  const goalsData = async () => {
+    const user_id = await AsyncStorage.getItem('user_id');
+    const token = await AsyncStorage.getItem('token');
+
+    try{
+      if (!user_id) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
+      
+      const response = await fetch(`http://localhost:3000/goals/${user_id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if(response.ok){
+          const data = await response.json();
+
+          setGoals({
+            weight: data.goalWeight,
+            steps: data.steps,
+            calories: data.goalCalories,
+            water: data.waterGoal
+          });
+        }
+    } catch(err){
+      console.log("Failed to get goals", err);
+    }
+  };
 
   // Goal configurations
   const goalConfigs: GoalConfig[] = [
@@ -112,20 +145,6 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     },
   ];
 
-  // Cek apakah ada goal yang berbeda dari default
-  const hasCustomGoals = (): boolean => {
-    return Object.keys(goals).some(
-      (key) =>
-        goals[key as keyof GoalData] !== defaultGoals[key as keyof GoalData]
-    );
-  };
-
-  useEffect(() => {
-    // Simulate loading saved goals
-    console.log('Loading saved goals...');
-    // In real app, you may load saved goals from AsyncStorage or backend here
-  }, []);
-
   const handleGoalChange = (key: keyof GoalData, value: string) => {
     // Filter hanya angka
     const numericValue = value.replace(/[^0-9]/g, '');
@@ -142,7 +161,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     return numValue >= config.min && numValue <= config.max;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validationErrors: string[] = [];
 
     goalConfigs.forEach((config) => {
@@ -159,7 +178,34 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    console.log('Saving goals:', goals);
+    const user_id = await AsyncStorage.getItem('user_id');
+    const token = await AsyncStorage.getItem('token');
+
+    try{
+      const response = await fetch(`http://localhost:3000/goal_setting/${user_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(
+          {
+            goalWeight : parseInt(goals.weight),
+            steps: parseInt(goals.steps),
+            goalCalories: parseInt(goals.calories),
+            goalWater: parseInt(goals.water)
+          })
+      });
+
+      if(response.ok){
+        Alert.alert('更新完了', '目標が保存されました');
+        setHasChanges(false);
+        navigation.goBack();
+      }
+    }catch(err){
+      console.error('Failed to update goals', err);
+      Alert.alert('エラー', '通信エラーが発生しました');
+    }
 
     Alert.alert('保存完了', '目標が保存されました', [
       {
@@ -200,6 +246,10 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       navigation.goBack();
     }
   };
+
+  useEffect(() => {
+      goalsData();
+    }, []);
 
   return (
     <SafeAreaView style={styles.container}>
