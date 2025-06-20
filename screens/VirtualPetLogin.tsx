@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
+import { SafeAreaView } from 'react-native-safe-area-context'; // Import SafeAreaView
 import type { RootStackParamList } from '../types';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
@@ -30,51 +32,38 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         body: JSON.stringify(finalData),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to register!');
-      }
-
       const data = await response.json();
-      await AsyncStorage.setItem('token', data.token);
-
-      Alert.alert('Login success!');
-      navigation.navigate('HomeScreen');
+      if (response.ok) {
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('user_id', data.user_id.toString());
+        console.log(data.user_id);
+        Alert.alert('Login success!');
+        navigation.navigate('HomeScreen');
+      } else {
+        // Use the error message from the backend if available, otherwise a generic message
+        const errorMessage = data.message || 'Login failed!';
+        Alert.alert('Error', errorMessage);
+      }
     } catch (error) {
       if (error instanceof Error) {
-        Alert.alert('エラー', error.message);
+        Alert.alert('Error', error.message);
       } else {
-        Alert.alert('エラー', '予期しないエラーが発生しました');
+        Alert.alert('Error', 'An unexpected error occurred');
       }
     }
+  };
 
-    try{
-          const response = await fetch('http://localhost:3000/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(finalData),
-          });
-    
-          const data = await response.json();
-          if(response.ok){
-            await AsyncStorage.setItem('token', data.token);
-            await AsyncStorage.setItem('user_id', data.user_id.toString());
-            console.log(data.user_id)
-            Alert.alert('Login success!');
-            navigation.navigate('HomeScreen');
-          } else{
-            console.log('Login failed!');
-          }
-        } catch (error) {
-            if (error instanceof Error) {
-              Alert.alert('エラー', error.message);
-            } else {
-              Alert.alert('エラー', '予期しないエラーが発生しました');
-            }
-        }
+  const handleGoBack = () => {
+    navigation.goBack();
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Tombol kembali */}
+      <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+        <Ionicons name="chevron-back" size={28} color="#000" />
+      </TouchableOpacity>
+
       <Text style={styles.title}>ログイン</Text>
 
       <Text style={styles.label}>メールアドレス</Text>
@@ -101,16 +90,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         onSubmitEditing={handleLogin}
       />
 
-      <TouchableOpacity>
-        <Text style={styles.forgotPassword}>
-          パスワードを忘れた方は <Text style={styles.link}>こちら</Text>
-        </Text>
-      </TouchableOpacity>
-
+      <View style={styles.forgotPasswordRow}>
+        <Text style={styles.forgotPasswordText}>パスワードを忘れた方は </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPasswordScreen')}>
+          <Text style={styles.link}>こちら</Text>
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>ログインする</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -122,6 +111,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F0F9',
     padding: 24,
     justifyContent: 'center',
+  },
+  backButton: { // Tambahkan gaya untuk tombol kembali
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 1,
   },
   title: {
     fontSize: 30,
@@ -189,5 +184,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 1,
+  },
+  forgotPasswordRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  forgotPasswordText: {
+    color: '#777',
+    fontSize: 13,
   },
 });

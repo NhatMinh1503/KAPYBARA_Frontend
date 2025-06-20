@@ -63,9 +63,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         },
         body: JSON.stringify(fullData)
       });
-      if(response.ok){
-        Alert.alert('更新', 'プロフィールが更新されました。');
-      }
+      if (response.ok) {
+        Alert.alert('プロフィールが更新されました。');
+        console.log("Alert should be shown");
+      } else {
+      const errorData = await response.json();
+      Alert.alert('エラー', errorData.message || 'プロフィールの更新に失敗しました。');
+    }
     }catch(error){
       console.error('Error during update:', error); 
     }
@@ -161,18 +165,15 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder="年齢"
                 keyboardType="numeric"
               />
-            </View>
-            <View style={styles.halfField}>
-              <Text style={styles.fieldLabel}>性別</Text>
-              <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setShowGenderDropdown(true)}
-              >
-                <Text style={styles.dropdownText}>{gender}</Text>
-                <Ionicons name="chevron-down" size={16} color="#666" />
-              </TouchableOpacity>
-            </View>
-          </View>
+             </View>
+
+  <View style={styles.halfField}>
+    <Text style={styles.fieldLabel}>性別</Text>
+    <View style={styles.textInput}>
+      <Text>{gender}</Text>
+    </View>
+  </View>
+</View>
 
           {/* Height and Weight Row */}
           <View style={styles.rowContainer}>
