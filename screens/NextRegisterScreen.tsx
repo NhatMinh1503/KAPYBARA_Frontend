@@ -8,16 +8,20 @@ import {
   Image,
   Platform,
   Alert,
+  SafeAreaView
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUserRegister } from '../contexts/UserRegisterContext';
-import AsyncStorage from '@react-native-async-storage/async-storage'; //Save user_id to AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons'; // Untuk ikon panah kembali
 
 type RootStackParamList = {
   Register2: undefined;
   ChoosePetScreen: undefined;
+  NextRegisterScreen: undefined;
+  RegisterScreen: undefined; // Tambahkan ini agar bisa kembali ke RegisterScreen
 };
 
 type Register2ScreenNavigationProp = NativeStackNavigationProp<
@@ -39,14 +43,12 @@ export default function Register2() {
   const [wakeupTime, setWakeTime] = useState('');
   const [waterIntake, setWaterIntake] = useState('');
 
-
-
-   const healthOptions = [
+  const healthOptions = [
     { label: '元気', image: require('../assets/rabbit.png') },
     { label: '疲れ', image: require('../assets/rabbit.png') },
     { label: '病気', image: require('../assets/rabbit.png') },
   ];
-  
+
   const handleRegister = async () => {
     // Number validation
     if (isNaN(parseInt(weight))) {
@@ -90,7 +92,7 @@ export default function Register2() {
     try {
       const response = await fetch('http://localhost:3000/users', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json',},
+        headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(fullData),
       });
 
@@ -99,187 +101,193 @@ export default function Register2() {
       }
 
       const data = await response.json();
-      await AsyncStorage.setItem('user_id', data.user_id); // Save user_id to AsyncStorage
+      await AsyncStorage.setItem('user_id', data.user_id);
 
       Alert.alert('登録完了', 'ユーザー情報が正常に登録されました。');
       navigation.navigate('ChoosePetScreen');
-  } catch (error) {
-      console.error('Error during registration:', error); 
-  }
-};
+    } catch (error) {
+      console.error('Error during registration:', error);
+      Alert.alert('登録エラー', 'Pendaftaran gagal. Silakan coba lagi.');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>もう少しおしえてね！</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F3FF' }}>
+      <View style={styles.container}>
+        {/* Tombol Kembali */}
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#333" />
+        </TouchableOpacity>
 
-      {/* 身長・体重 */}
-      <View style={styles.row}>
-        <View style={styles.half}>
-          <Text style={styles.label}>身長</Text>
-          <View style={styles.inputWithUnit}>
-            <TextInput
-              style={styles.inputInner}
-              placeholder=""
-              placeholderTextColor="#000"
-              keyboardType="numeric"
-              value={height}
-              onChangeText={setHeight}
-            />
-            <Text style={styles.unitInside}>cm</Text>
+        <Text style={styles.title}>もう少しおしえてね！</Text>
+
+        {/* Tinggi Badan & Berat Badan Saat Ini */}
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Text style={styles.label}>身長</Text>
+            <View style={styles.inputWithUnit}>
+              <TextInput
+                style={styles.inputInner}
+                placeholder=""
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={height}
+                onChangeText={setHeight}
+              />
+              <Text style={styles.unitInside}>cm</Text>
+            </View>
+          </View>
+          <View style={styles.half}>
+            <Text style={styles.label}>今の体重</Text>
+            <View style={styles.inputWithUnit}>
+              <TextInput
+                style={styles.inputInner}
+                placeholder=""
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={weight}
+                onChangeText={setWeight}
+              />
+              <Text style={styles.unitInside}>kg</Text>
+            </View>
           </View>
         </View>
-        <View style={styles.half}>
-          <Text style={styles.label}>今の体重</Text>
-          <View style={styles.inputWithUnit}>
-            <TextInput
-              style={styles.inputInner}
-              placeholder=""
-              placeholderTextColor="#000"
-              keyboardType="numeric"
-              value={weight}
-              onChangeText={setWeight}
-            />
-            <Text style={styles.unitInside}>kg</Text>
+
+        {/* Baris 1: Tujuan dan Target Berat Badan */}
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Text style={styles.label}>目標</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={goal}
+                onValueChange={(itemValue) => setGoal(itemValue)}
+                style={styles.picker}
+                dropdownIconColor="#333"
+                mode="dropdown"
+              >
+                <Picker.Item label="▼ 選択してください" value="" color="#999" />
+                <Picker.Item label="体重を落としたい" value="体重を落としたい" />
+                <Picker.Item label="筋肉をつけたい" value="筋肉をつけたい" />
+                <Picker.Item label="健康維持したい" value="健康維持したい" />
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.half}>
+            <Text style={styles.label}>目標体重</Text>
+            <View style={styles.inputWithUnit}>
+              <TextInput
+                style={styles.inputInner}
+                placeholder=""
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={goalWeight}
+                onChangeText={setGoalWeight}
+              />
+              <Text style={styles.unitInside}>kg</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* 1段目：目標と目標体重 */}
-  <View style={styles.row}>
-    <View style={styles.half}>
-      <Text style={styles.label}>目標</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={goal}
-          onValueChange={(itemValue) => setGoal(itemValue)}
-          style={styles.picker}
-          dropdownIconColor="#000"
-          mode="dropdown"
-        >
-          <Picker.Item label="▼ 選択してください" value="" color="#999" />
-          <Picker.Item label="体重を落としたい" value="体重を落としたい" />
-          <Picker.Item label="筋肉をつけたい" value="筋肉をつけたい" />
-          <Picker.Item label="健康維持したい" value="健康維持したい" />
-        </Picker>
-      </View>
-    </View>
+        {/* Baris 2: Target Langkah dan Asupan Air */}
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Text style={styles.label}>目標歩数</Text>
+            <View style={styles.inputWithUnit}>
+              <TextInput
+                style={styles.inputInner}
+                placeholder=""
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={steps}
+                onChangeText={setSteps}
+              />
+              <Text style={styles.unitInside}>歩</Text>
+            </View>
+          </View>
 
-      <View style={styles.half}>
-        <Text style={styles.label}>目標体重</Text>
-        <View style={styles.inputWithUnit}>
-          <TextInput
-            style={styles.inputInner}
-            placeholder=""
-            placeholderTextColor="#000"
-            keyboardType="numeric"
-            value={goalWeight}
-            onChangeText={setGoalWeight}
-          />
-          <Text style={styles.unitInside}>kg</Text>
+          <View style={styles.half}>
+            <Text style={styles.label}>水分摂取</Text>
+            <View style={styles.inputWithUnit}>
+              <TextInput
+                style={styles.inputInner}
+                placeholder=""
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={waterIntake}
+                onChangeText={setWaterIntake}
+              />
+              <Text style={styles.unitInside}>ml</Text>
+            </View>
+          </View>
         </View>
-      </View>
-    </View>
 
-    {/* 2段目：目標歩数と水分摂取 */}
-    <View style={styles.row}>
-      <View style={styles.half}>
-        <Text style={styles.label}>目標歩数</Text>
-        <View style={styles.inputWithUnit}>
-          <TextInput
-            style={styles.inputInner}
-            placeholder=""
-            placeholderTextColor="#000"
-            keyboardType="numeric"
-            value={steps}
-            onChangeText={setSteps}
-          />
-          <Text style={styles.unitInside}>歩</Text>
-        </View>
-      </View>
-
-      <View style={styles.half}>
-        <Text style={styles.label}>水分摂取</Text>
-        <View style={styles.inputWithUnit}>
-          <TextInput
-            style={styles.inputInner}
-            placeholder=""
-            placeholderTextColor="#000"
-            keyboardType="numeric"
-            value={waterIntake}
-            onChangeText={setWaterIntake}
-          />
-          <Text style={styles.unitInside}>ml</Text>
-        </View>
-      </View>
-    </View>
-
-
-        {/* 睡眠・起床時間（別 row） */}
+        {/* Waktu Tidur & Waktu Bangun (Baris terpisah) */}
         <View style={styles.row}>
           <View style={styles.half}>
             <Text style={styles.label}>就寝時間</Text>
             <View style={styles.inputWithUnit}>
-            <TextInput
-              style={styles.inputInner}
-              placeholder=""
-              placeholderTextColor="#000"
-              value={sleepTime}
-              onChangeText={setSleepTime}
-            />
-            <Text style={styles.unitInside}>am</Text>
-          </View>
+              <TextInput
+                style={styles.inputInner}
+                placeholder="00:00"
+                placeholderTextColor="#999"
+                value={sleepTime}
+                onChangeText={setSleepTime}
+              />
+              <Text style={styles.unitInside}>{Platform.OS === 'ios' ? 'AM' : ''}</Text>
+            </View>
           </View>
           <View style={styles.half}>
             <Text style={styles.label}>起床時間</Text>
             <View style={styles.inputWithUnit}>
-            <TextInput
-              style={styles.inputInner}
-              placeholder=""
-              placeholderTextColor="#000"
-              value={wakeupTime}
-              onChangeText={setWakeTime}
-            />
-            <Text style={styles.unitInside}>pm</Text>
+              <TextInput
+                style={styles.inputInner}
+                placeholder="00:00"
+                placeholderTextColor="#999"
+                value={sleepTime}
+                onChangeText={setWakeTime}
+              />
+              <Text style={styles.unitInside}>{Platform.OS === 'ios' ? 'AM' : ''}</Text>
+            </View>
+
           </View>
         </View>
+
+        {/* Kondisi Kesehatan */}
+        <Text style={[styles.label, { marginTop: 20 }]}>今の健康状態</Text>
+        <View style={styles.healthRow}>
+          {healthOptions.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.healthItem,
+                health === option.label && styles.selectedHealth,
+              ]}
+              onPress={() => setHealth(option.label)}
+            >
+              <Image source={option.image} style={styles.icon} />
+              <Text style={styles.healthLabel}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      
 
-
-      {/* 健康状態 */}
-      <Text style={[styles.label, { marginTop: 20 }]}>今の健康状態</Text>
-      <View style={styles.healthRow}>
-        {healthOptions.map((option, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.healthItem,
-              health === option.label && styles.selectedHealth,
-            ]}
-            onPress={() => setHealth(option.label)}
-          >
-            <Image source={option.image} style={styles.icon} />
-            <Text style={styles.healthLabel}>{option.label}</Text>
-          </TouchableOpacity>
-        ))}
+        {/* Tombol Daftar */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => {
+            if (!goal) {
+              Alert.alert('Peringatan', 'Tujuan harus dipilih.');
+              return;
+            }
+            handleRegister();
+          }}
+        >
+          <Text style={styles.buttonText}>登録</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* 登録ボタン */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => {
-          if (!goal) {
-            alert('目標を選択してください');
-            return;
-          }
-          handleRegister();
-        }}
-      >
-        <Text style={styles.buttonText}>登録</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -288,23 +296,24 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
   },
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20, // Sesuaikan posisi untuk iOS/Android
+    left: 24,
+    zIndex: 1,
+  },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
+    color: 'black',
   },
   label: {
     fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
     marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  half: {
-    flex: 0.48,
   },
   inputWithUnit: {
     position: 'relative',
@@ -313,26 +322,36 @@ const styles = StyleSheet.create({
   inputInner: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#D0CDE1',
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     paddingRight: 32,
-    paddingVertical: 8,
     marginBottom: 8,
     color: '#000',
+    fontSize: 15,
   },
   unitInside: {
     position: 'absolute',
-    right: 10,
+    right: 14,
     fontSize: 14,
     color: '#000',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 16,
+    marginBottom: 16,
+  },
+  half: {
+    flex: 1,
   },
   pickerContainer: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#D0CDE1',
     borderRadius: 8,
-     marginBottom: 8, 
+    marginBottom: 8,
     height: Platform.OS === 'ios' ? 50 : 48,
     justifyContent: 'center',
     paddingHorizontal: Platform.OS === 'ios' ? 6 : 0,
@@ -346,6 +365,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 16,
+    marginBottom: 28,
   },
   healthItem: {
     alignItems: 'center',
@@ -360,6 +380,7 @@ const styles = StyleSheet.create({
   healthLabel: {
     marginTop: 4,
     fontSize: 13,
+    color: '#333',
   },
   icon: {
     width: 60,
@@ -371,10 +392,16 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 25,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+    letterSpacing: 1,
   },
 });
