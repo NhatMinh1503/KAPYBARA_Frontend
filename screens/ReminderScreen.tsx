@@ -21,8 +21,8 @@ type RootStackParamList = {
 type Props = NativeStackScreenProps<RootStackParamList, 'ReminderScreen'>;
 
 const ReminderScreen: React.FC<Props> = ({ navigation }) => {
-  const [waterReminderActive, setWaterReminderActive] = useState(true);
-  const [eyeReminderActive, setEyeReminderActive] = useState(true);
+  const [waterReminderActive, setWaterReminderActive] = useState(false);
+  const [eyeReminderActive, setEyeReminderActive] = useState(false);
 
    const getCurrentRouteName = () => {
     try {
@@ -34,43 +34,30 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    const setupRemainder = async () =>{
-      const { status } = await Notifications.requestPermissionsAsync();
-      if(status !== 'granted'){
-        alert('通知の許可が必要です！');
-        return;
-      }
+  const setupRemainderWater = async () =>{
+    const { status } = await Notifications.requestPermissionsAsync();
+    if(status !== 'granted'){
+      alert('通知の許可が必要です！');
+      return;
+    }
 
-      if(Platform.OS === 'ios'){
-        console.log('iOS notification permission granted!');
-      }
-    };
+    if(Platform.OS === 'ios'){
+      console.log('iOS notification permission granted!');
+    }
 
-    setupRemainder();
-  }, []);
-
-  useEffect(() => {
-    const scheduleWaterRemainder = async () => {
-      if(!waterReminderActive){
-        await Notifications.cancelAllScheduledNotificationsAsync();
-        return;
-      }
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '水分補給',
-          body: 'お水を飲みましょう！',
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 120,
-          repeats: true,
-        },
-      });
-    };
-    scheduleWaterRemainder();
-  }, [waterReminderActive]);
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '水分補給',
+        body: 'お水を飲みましょう！',
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 120,
+        repeats: true,
+      },
+    });
+    return true;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -89,7 +76,17 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
               styles.toggleSwitch,
               waterReminderActive ? styles.toggleActive : styles.toggleInactive,
             ]}
-            onPress={() => setWaterReminderActive(prev => !prev)}
+            onPress={async () => {
+              if(!waterReminderActive){
+                 const success = await setupRemainderWater();
+                if(success){
+                  setWaterReminderActive(true);
+                }
+              }else{
+                await Notifications.cancelAllScheduledNotificationsAsync();
+                setWaterReminderActive(false);
+              }
+            }}
           >
             <View
               style={[
