@@ -13,9 +13,9 @@ export default function ChoosePetScreen({ navigation }: Props) {
   const { petData, setPetData } = usePetRegister();
 
   const pets = [
-    { id: 1, source: require('../assets/rabbit.png') },
-    { id: 2, source: require('../assets/rabbit.png') },
-    { id: 3, source: require('../assets/rabbit.png') },
+    { id: 1, source: require('../assets/genki.png') },
+    { id: 2, source: require('../assets/tsukare.png') },
+    { id: 3, source: require('../assets/byoki.png') },
   ];
 
   const handleNext = () => {

@@ -634,8 +634,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 3, // Untuk Android
-    overflow: 'hidden', // Penting agar borderRadius terlihat pada konten di dalamnya
+    elevation: 3,
+    overflow: 'hidden', 
   },
   mealHeaderRow: {
     flexDirection: 'row',
@@ -730,8 +730,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   mealsContainer: {
-    // Menghapus latar belakang putih di sini karena sudah ada di mealSectionCard
-    // backgroundColor: '#fff',
+  
   },
   nutritionValuesRow: {
     flexDirection: 'row',

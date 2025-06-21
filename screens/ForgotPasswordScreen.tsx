@@ -43,7 +43,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
 
       <TextInput
         style={styles.input}
-        placeholder="Email Anda"
+        placeholder=""
         placeholderTextColor="#999"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -101,6 +101,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 25,
     marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
