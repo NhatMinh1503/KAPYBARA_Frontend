@@ -21,7 +21,7 @@ type RootStackParamList = {
   Register2: undefined;
   ChoosePetScreen: undefined;
   NextRegisterScreen: undefined;
-  RegisterScreen: undefined; // Tambahkan ini agar bisa kembali ke RegisterScreen
+  RegisterScreen: undefined;
 };
 
 type Register2ScreenNavigationProp = NativeStackNavigationProp<
@@ -119,10 +119,10 @@ export default function Register2() {
     <Ionicons name="chevron-back" size={24} color="#333" />
   </TouchableOpacity>
 
-  {/* Tombol Maju ( ">" ) */}
-  <TouchableOpacity onPress={() => navigation.navigate('ChoosePetScreen')} style={styles.forwardButton}>
+  {/* Tombol Maju ( ">" )
+  <TouchableOpacity onPress={() => navigation.navigate('ChoosePetScreen')}>
     <Ionicons name="chevron-forward" size={24} color="#333" />
-  </TouchableOpacity>
+  </TouchableOpacity> */}
 
         <Text style={styles.title}>もう少しおしえてね！</Text>
 

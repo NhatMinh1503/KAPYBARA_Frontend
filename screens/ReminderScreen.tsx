@@ -23,8 +23,10 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ReminderScreen'>;
 const ReminderScreen: React.FC<Props> = ({ navigation }) => {
   const [waterReminderActive, setWaterReminderActive] = useState(false);
   const [eyeReminderActive, setEyeReminderActive] = useState(false);
+  // Add a new state for meal reminder
+  const [mealReminderActive, setMealReminderActive] = useState(false);
 
-   const getCurrentRouteName = () => {
+  const getCurrentRouteName = () => {
     try {
       const state = navigation.getState();
       return state.routes[state.index]?.name || '';
@@ -52,7 +54,33 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 120,
+        seconds: 120, // Example: 2 minutes for testing
+        repeats: true,
+      },
+    });
+    return true;
+  };
+
+  // New function for meal reminder
+  const setupReminderMeal = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      alert('通知の許可が必要です！');
+      return;
+    }
+
+    if (Platform.OS === 'ios') {
+      console.log('iOS notification permission granted!');
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '食事の時間',
+        body: '食事をしましょう！',
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 300, // Example: 5 minutes for testing, adjust as needed
         repeats: true,
       },
     });
@@ -68,6 +96,34 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Reminders */}
       <View style={styles.content}>
+                {/* 食事リマインド (New Meal Reminder) */}
+        <View style={styles.reminderBox}>
+          <Text style={styles.reminderText}>食事リマインド</Text>
+          <TouchableOpacity
+            style={[
+              styles.toggleSwitch,
+              mealReminderActive ? styles.toggleActive : styles.toggleInactive,
+            ]}
+            onPress={async () => {
+              if (!mealReminderActive) {
+                const success = await setupReminderMeal();
+                if (success) {
+                  setMealReminderActive(true);
+                }
+              } else {
+                await Notifications.cancelAllScheduledNotificationsAsync();
+                setMealReminderActive(false);
+              }
+            }}
+          >
+            <View
+              style={[
+                styles.toggleCircle,
+                mealReminderActive ? styles.circleActive : styles.circleInactive,
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
         {/* 水分補給リマインド */}
         <View style={styles.reminderBox}>
           <Text style={styles.reminderText}>水分補給リマインド</Text>
@@ -78,7 +134,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
             ]}
             onPress={async () => {
               if(!waterReminderActive){
-                 const success = await setupRemainderWater();
+                  const success = await setupRemainderWater();
                 if(success){
                   setWaterReminderActive(true);
                 }
@@ -97,14 +153,15 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* 目の疲れリマインド */}
+        {/* 目の疲れリマインド (Changed the text to be more general for now) */}
         <View style={styles.reminderBox}>
-          <Text style={styles.reminderText}>就寝時間リマインド</Text>
+          <Text style={styles.reminderText}>目の疲れリマインド</Text> {/* Reverted text to "Eye fatigue reminder" */}
           <TouchableOpacity
             style={[
               styles.toggleSwitch,
               eyeReminderActive ? styles.toggleActive : styles.toggleInactive,
             ]}
+            // You'll need to implement actual notification logic for eye reminder
             onPress={() => setEyeReminderActive(prev => !prev)}
           >
             <View
@@ -117,79 +174,79 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
 
-     {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
-            <View style={styles.bottomNav}>
-              <TouchableOpacity
-                style={[
-                  styles.navItem,
-                  getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
-                ]}
-                onPress={() => navigation.navigate('ReminderScreen')}
-              >
-                <Ionicons 
-                  name="time-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
-                />
-              </TouchableOpacity>
-      
-              <TouchableOpacity
-                style={[
-                  styles.navItem,
-                  getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
-                ]}
-                onPress={() => navigation.navigate('ProgressTrackerScreen')}
-              >
-                <Ionicons 
-                  name="stats-chart-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
-                />
-              </TouchableOpacity>
-      
-              <TouchableOpacity
-                style={[
-                  styles.navItem,
-                  getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
-                ]}
-                onPress={() => navigation.navigate('HomeScreen')}
-              >
-                <Ionicons 
-                  name="home" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
-                />
-              </TouchableOpacity>
-      
-              <TouchableOpacity
-                style={[
-                  styles.navItem,
-                  getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
-                ]}
-                onPress={() => navigation.navigate('DailyHealthScreen')}
-              >
-                <Ionicons 
-                  name="create-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
-                />
-              </TouchableOpacity>
-      
-              <TouchableOpacity
-                style={[
-                  styles.navItem,
-                  getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
-                ]}
-                onPress={() => navigation.navigate('UserProfileScreen')}
-              >
-                <Ionicons 
-                  name="person-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
-                />
-              </TouchableOpacity>
-            </View>
-          </SafeAreaView>
+      {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            getCurrentRouteName() === 'ReminderScreen' && styles.activeNavItem
+          ]}
+          onPress={() => navigation.navigate('ReminderScreen')}
+        >
+          <Ionicons
+            name="time-outline"
+            size={24}
+            color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            getCurrentRouteName() === 'ProgressTrackerScreen' && styles.activeNavItem
+          ]}
+          onPress={() => navigation.navigate('ProgressTrackerScreen')}
+        >
+          <Ionicons
+            name="stats-chart-outline"
+            size={24}
+            color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            getCurrentRouteName() === 'HomeScreen' && styles.activeNavItem
+          ]}
+          onPress={() => navigation.navigate('HomeScreen')}
+        >
+          <Ionicons
+            name="home"
+            size={24}
+            color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            getCurrentRouteName() === 'DailyHealthScreen' && styles.activeNavItem
+          ]}
+          onPress={() => navigation.navigate('DailyHealthScreen')}
+        >
+          <Ionicons
+            name="create-outline"
+            size={24}
+            color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.navItem,
+            getCurrentRouteName() === 'UserProfileScreen' && styles.activeNavItem
+          ]}
+          onPress={() => navigation.navigate('UserProfileScreen')}
+        >
+          <Ionicons
+            name="person-outline"
+            size={24}
+            color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"}
+          />
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -204,13 +261,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header: {
-  height: 60,
-  justifyContent: 'center',
-  alignItems: 'center',
-  borderBottomWidth: 1,
-  borderBottomColor: '#eee',
-  backgroundColor: '#f8f4ff',
-},
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#f8f4ff',
+  },
 
   backButton: {
     padding: 8,

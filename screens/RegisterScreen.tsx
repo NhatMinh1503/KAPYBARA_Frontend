@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, SafeAreaView } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  SafeAreaView,
+  Modal, // Import Modal
+  Pressable, // Import Pressable
+} from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types'; // Sesuaikan jalur file types Anda
+import type { RootStackParamList } from '../types';
 import { UserRegisterProvider, useUserRegister } from '../contexts/UserRegisterContext';
-import { Ionicons } from '@expo/vector-icons'; // Untuk ikon panah kembali
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NextRegisterScreen'>;
@@ -17,7 +26,8 @@ export default function RegisterScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [age, setAge] = useState('');
-  const [gender, setGender] = useState('女性');
+  const [gender, setGender] = useState('女性'); // Default gender to '女性'
+  const [isGenderModalVisible, setGenderModalVisible] = useState(false); // State for modal visibility
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
@@ -31,6 +41,11 @@ export default function RegisterScreen({ navigation }: Props) {
     });
 
     navigation.navigate('NextRegisterScreen');
+  };
+
+  const selectGender = (selectedGender: string) => {
+    setGender(selectedGender);
+    setGenderModalVisible(false); // Close modal after selection
   };
 
   return (
@@ -98,21 +113,51 @@ export default function RegisterScreen({ navigation }: Props) {
             </View>
             <View style={styles.half}>
               <Text style={styles.label}>性別</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={gender}
-                  onValueChange={(itemValue) => setGender(itemValue)}
-                  style={styles.picker}
-                  dropdownIconColor="#333"
-                  mode="dropdown"
-                >
-                  <Picker.Item label="女" value="女性" />
-                  <Picker.Item label="男" value="男性" />
-                  <Picker.Item label="その他" value="その他" />
-                </Picker>
-              </View>
+              {/* Touchable Opacity for Gender Modal */}
+              <TouchableOpacity
+              style={[styles.input, styles.genderInput, { justifyContent: 'center' }]} // Reusing input styles for consistent look and centering text
+              onPress={() => setGenderModalVisible(true)}
+              >
+              <Text style={styles.genderText}>{gender === '女性' ? '女' : '男'}</Text>
+              </TouchableOpacity>
             </View>
           </View>
+
+          {/* Gender Selection Modal */}
+          <Modal
+            animationType="fade" // Can be 'none', 'slide', or 'fade'
+            transparent={true}
+            visible={isGenderModalVisible}
+            onRequestClose={() => {
+              setGenderModalVisible(!isGenderModalVisible);
+            }}
+          >
+            <Pressable
+              style={styles.centeredView}
+              onPress={() => setGenderModalVisible(false)} // Close modal when pressing outside
+            >
+              <View style={styles.modalView}>
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => selectGender('女性')}
+                >
+                  <Text style={styles.modalOptionText}>女</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => selectGender('男性')}
+                >
+                  <Text style={styles.modalOptionText}>男</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalOption, styles.cancelButton]}
+                  onPress={() => setGenderModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>キャンセル</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Modal>
 
           {/* Tombol Selanjutnya */}
           <TouchableOpacity style={styles.button} onPress={handleNext}>
@@ -179,25 +224,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  unitInside: {
-    position: 'absolute',
-    right: 10,
-    fontSize: 14,
-    color: '#000',
+ unitInside: {
+  position: 'absolute',
+  right: 10,
+  top: '20%',
+  fontSize: 16,
+  color: '#000',
+},
+
+  genderInput: {
+   flexDirection: 'row',
+   alignItems: 'center',
+   paddingHorizontal: 14, // Adjust padding as needed
+ },
+ genderText: {
+   fontSize: 15,
+   color: '#000',
+   flex: 1, // Make text take available space
+   textAlign: 'left', // Align text to the left
+ },
+  dropdownIcon: {
+    marginLeft: 8,
   },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D0CDE1',
-    borderRadius: 8,
-    height: Platform.OS === 'ios' ? 50 : 48,
+  // Styles for Modal
+  centeredView: {
+    flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: Platform.OS === 'ios' ? 6 : 0,
-    overflow: 'hidden',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)', // Dim background
   },
-  picker: {
-    height: Platform.OS === 'ios' ? 180 : 48,
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '80%', // Adjust width as needed
+  },
+  modalOption: {
+    padding: 10,
     width: '100%',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalOptionText: {
+    fontSize: 18,
+    color: '#333',
+  },
+  cancelButton: {
+    marginTop: 10,
+    borderBottomWidth: 0, // No border for cancel button
+  },
+  cancelButtonText: {
+    fontSize: 18,
+    color: '#FF6347', // A different color for cancel for emphasis
+    fontWeight: 'bold',
   },
   button: {
     backgroundColor: '#8B7CF6',

@@ -357,6 +357,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
+    textAlign: 'center',
   },
   bottomNav: {
     flexDirection: 'row',

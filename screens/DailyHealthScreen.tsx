@@ -68,7 +68,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
  
       const steps = parseInt(data.steps);
       if (isNaN(steps)) throw new Error('Invalid steps goal');
-
+ 
       const goalCall = parseInt(data.goalCalories);
       if (isNaN(goalCall)) throw new Error('Invalid goalCalories goal');
  
@@ -139,20 +139,35 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
       const newCarbs = updatedFoods.reduce((sum, food) => sum + food.carbs * food.quantity, 0);
       const newProtein = updatedFoods.reduce((sum, food) => sum + food.protein * food.quantity, 0);
       const newTotalCalories = updatedFoods.reduce((sum, food) => sum + food.calories * food.quantity, 0);
-      const newPercentage = Math.round(((newFat + newCarbs + newProtein) / 100) * 100);
+      const newPercentage =  Math.round((newTotalCalories / goalCalories) * 100);
  
-      return {
-        ...prev,
-        [mealType]: {
-          fat: newFat,
-          carbs: newCarbs,
-          protein: newProtein,
-          totalCalories: newTotalCalories,
-          percentage: newPercentage,
-          foods: updatedFoods
-        },
-      };
-    });
+       const newMeals = {
+          ...prev,
+          [mealType]: {
+            fat: newFat,
+            carbs: newCarbs,
+            protein: newProtein,
+            totalCalories: newTotalCalories,
+            percentage: newPercentage,
+            foods: updatedFoods
+          }
+        };
+ 
+        const allTotalCalories = Object.values(newMeals).reduce(
+          (sum, meal) => sum + meal.totalCalories,
+          0
+        );
+ 
+        (async () => {
+          try {
+            await AsyncStorage.setItem('@calories', allTotalCalories.toString());
+          } catch (err) {
+            console.error('Failed to save calories to Async Storage', err);
+          }
+        })();
+ 
+        return newMeals;
+      });
   }, []);
  
   const updateFoodQuantity = useCallback((mealType: MealType, foodId: string, delta: number) => {
@@ -230,18 +245,8 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     return { ...total, percentage };
   };
  
-  const saveTotalCalories = async () => {
-    const total = calculateTotalNutrition();
-    try {
-      await AsyncStorage.setItem('@calories', total.totalCalories.toString());
-    } catch (err) {
-      console.error('Error to save calories to Storage', err);
-    }
-  }
- 
   const saveMealsToStorage = async () => {
     try {
-      saveTotalCalories();
       const key = `@meals:${getLogDate()}`;
       await AsyncStorage.setItem(key, JSON.stringify(meals));
     } catch (err) {
@@ -284,8 +289,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
   };
   const resetStoredData = async () => {
     try {
-      const nutrition = calculateTotalNutrition();
-      const calories = nutrition.totalCalories;
+      const calories = parseInt(await AsyncStorage.getItem('@calories') ?? '0');
       const water = parseInt(await AsyncStorage.getItem('@waterIntake') ?? '0');
       const steps = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
  
@@ -313,9 +317,6 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
   const resetIfNewDay = useCallback(async () => {
     const today = getLogDate();
     const lastReset = await AsyncStorage.getItem('lastResetDate');
- 
-    console.log('Today:', today);
-    console.log('Last Reset:', lastReset);
  
     if (!lastReset || lastReset !== today) {
       await fetchGoals();
@@ -366,6 +367,32 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
       loadRemainingSteps();
     }, [])
   );
+ 
+  useEffect(() => {
+    const goalCall = async () => {
+      const value = parseInt(await AsyncStorage.getItem('@goalCalories') || '0', 10);
+      setGoalCalories(value);
+    };
+    goalCall();
+  });
+ 
+  useEffect(() => {
+  const checkAsyncStorage = async () => {
+    const calories = await AsyncStorage.getItem('@calories');
+    const meals = await AsyncStorage.getItem(`@meals:${getLogDate()}`);
+    const water = await AsyncStorage.getItem('@waterIntake');
+    const steps = await AsyncStorage.getItem('@stepsIntake');
+ 
+    console.log('🍽 Calories:', calories);
+    console.log('🍱 Meals:', JSON.parse(meals || '{}'));
+    console.log('💧 Water Intake:', water);
+    console.log('🚶 Steps:', steps);
+  };
+ 
+  checkAsyncStorage();
+}, []);
+ 
+ 
  
   const total = calculateTotalNutrition();
  
@@ -428,16 +455,6 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
       </View>
     );
   };
-
-  useEffect(() => {
-    const goalCall = async () => {
-      const value = parseInt(await AsyncStorage.getItem('@goalCalories') || '0', 10);
-      setGoalCalories(value);
-    };
-    goalCall();
-  })
-
-
  
   return (
     <SafeAreaView style={styles.container}>
@@ -630,12 +647,10 @@ const styles = StyleSheet.create({
   },
   quantityButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#555555',
   },
   foodQuantity: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333333',
     marginHorizontal: 8,
   },
@@ -644,16 +659,15 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   mealSectionCard: {
-    backgroundColor: '#FFFFFF', // Latar belakang putih
-    borderRadius: 12, // Sudut membulat untuk kartu meal
-    marginVertical: 8, // Spasi vertikal antar kartu meal
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 12,
+    marginVertical: 8, 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
     overflow: 'hidden',
-
   },
   mealHeaderRow: {
     flexDirection: 'row',
@@ -748,7 +762,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   mealsContainer: {
-
+ 
   },
   nutritionValuesRow: {
     flexDirection: 'row',
@@ -791,7 +805,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
-  mealName: { // Ini adalah gaya lama untuk meal name di foodItemRow, mungkin perlu disesuaikan atau dihapus
+  mealName: { 
     fontSize: 14,
     color: '#000',
     fontWeight: '400',
@@ -800,7 +814,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#8B7CF6', // Warna ungu yang lebih menonjol
+    backgroundColor: '#8B7CF6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -868,4 +882,3 @@ const styles = StyleSheet.create({
 });
  
 export default DailyHealthScreen;
- 

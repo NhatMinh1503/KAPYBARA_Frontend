@@ -9,9 +9,11 @@ import {
   StatusBar,
   TextInput,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Type definitions
 type RootStackParamList = {
@@ -20,12 +22,13 @@ type RootStackParamList = {
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
-  LastRegisterScreen:undefined;
+  LastRegisterScreen: undefined;
   HomeScreen: undefined;
   ReminderScreen: undefined;
   ProgressTrackerScreen: undefined;
   DailyHealthScreen: undefined;
   UserProfileScreen: undefined;
+  GoalSettingScreen: undefined;
 };
 
 type GoalSettingScreenNavigationProp = NativeStackNavigationProp<
@@ -42,6 +45,8 @@ interface GoalData {
   steps: string;
   calories: string;
   water: string;
+  bedtime?: string;
+  wakeup?: string;
 }
 
 interface GoalConfig {
@@ -55,19 +60,20 @@ interface GoalConfig {
   defaultValue: string;
 }
 
-// Default goals constant
 const defaultGoals: GoalData = {
   weight: '60',
   steps: '10000',
   calories: '2000',
   water: '2000',
+  bedtime: '23:00',
+  wakeup: '07:00',
 };
 
 const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
   const [goals, setGoals] = useState<GoalData>(defaultGoals);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showPicker, setShowPicker] = useState<{ type: 'bedtime' | 'wakeup' | null }>({ type: null });
 
-  // Goal configurations
   const goalConfigs: GoalConfig[] = [
     {
       key: 'weight',
@@ -111,19 +117,23 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     },
   ];
 
-  // Cek apakah ada goal yang berbeda dari default
-  const hasCustomGoals = (): boolean => {
-    return Object.keys(goals).some(
-      (key) =>
-        goals[key as keyof GoalData] !== defaultGoals[key as keyof GoalData]
-    );
-  };
+  const handleTimeChange = (event: any, selectedDate: Date | undefined) => {
+    if (!selectedDate) {
+      setShowPicker({ type: null });
+      return;
+    }
+    const hours = selectedDate.getHours().toString().padStart(2, '0');
+    const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
+    const formattedTime = `${hours}:${minutes}`;
 
-  useEffect(() => {
-    // Simulate loading saved goals
-    console.log('Loading saved goals...');
-    // In real app, you may load saved goals from AsyncStorage or backend here
-  }, []);
+    if (showPicker.type === 'bedtime') {
+      setGoals((prev) => ({ ...prev, bedtime: formattedTime }));
+    } else if (showPicker.type === 'wakeup') {
+      setGoals((prev) => ({ ...prev, wakeup: formattedTime }));
+    }
+    setHasChanges(true);
+    setShowPicker({ type: null });
+  };
 
   const handleGoalChange = (key: keyof GoalData, value: string) => {
     // Filter hanya angka
@@ -206,9 +216,9 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Header */}
       <View style={styles.header}>
-         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-    <Ionicons name="chevron-back" size={24} color="#333" />
-  </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Ionicons name="chevron-back" size={24} color="#333" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>目標設定</Text>
         <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
           <Text style={styles.resetButtonText}>リセット</Text>
@@ -241,10 +251,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
 
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[
-                    styles.goalInput,
-                    !isValid && currentValue && styles.invalidInput,
-                  ]}
+                  style={[styles.goalInput, !isValid && currentValue && styles.invalidInput]}
                   value={currentValue}
                   onChangeText={(value) => handleGoalChange(config.key, value)}
                   placeholder={config.placeholder}
@@ -266,6 +273,66 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           );
         })}
+
+        {/* Bedtime Picker */}
+        <View style={styles.goalCard}>
+          <View style={styles.goalHeader}>
+            <View style={styles.goalTitleContainer}>
+              <Ionicons name="moon-outline" size={24} color="#4A90E2" />
+              <Text style={styles.goalTitle}>就寝時間</Text>
+            </View>
+            <Text style={styles.goalUnit}>HH:mm</Text>
+          </View>
+
+          {Platform.OS === 'web' ? (
+            <input
+              type="time"
+              value={goals.bedtime}
+              onChange={(e) => {
+                setGoals((prev) => ({ ...prev, bedtime: e.target.value }));
+                setHasChanges(true);
+              }}
+              style={styles.webTimeInput} // Apply web-specific style
+            />
+          ) : (
+            <TouchableOpacity
+              style={styles.inputContainer} // Apply existing input container style
+              onPress={() => setShowPicker({ type: 'bedtime' })}
+            >
+              <Text style={styles.goalInput}>{goals.bedtime}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Wakeup Picker */}
+        <View style={styles.goalCard}>
+          <View style={styles.goalHeader}>
+            <View style={styles.goalTitleContainer}>
+              <Ionicons name="sunny-outline" size={24} color="#4A90E2" />
+              <Text style={styles.goalTitle}>起床時間</Text>
+            </View>
+            <Text style={styles.goalUnit}>HH:mm</Text>
+          </View>
+
+          {Platform.OS === 'web' ? (
+            <input
+              type="time"
+              value={goals.wakeup}
+              onChange={(e) => {
+                setGoals((prev) => ({ ...prev, wakeup: e.target.value }));
+                setHasChanges(true);
+              }}
+              style={styles.webTimeInput} // Apply web-specific style
+            />
+          ) : (
+            <TouchableOpacity
+              style={styles.inputContainer} // Apply existing input container style
+              onPress={() => setShowPicker({ type: 'wakeup' })}
+            >
+              <Text style={styles.goalInput}>{goals.wakeup}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
 
       {/* Save Button */}
@@ -276,19 +343,33 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
           disabled={!hasChanges}
         >
           <Text
-            style={[
-              styles.saveButtonText,
-              !hasChanges && styles.saveButtonTextDisabled,
-            ]}
+            style={[styles.saveButtonText, !hasChanges && styles.saveButtonTextDisabled]}
           >
             目標を保存
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* DateTimePicker untuk iOS dan Android */}
+      {showPicker.type && Platform.OS !== 'web' && (
+        <DateTimePicker
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          value={
+            new Date(
+              2024,
+              0,
+              1,
+              parseInt(goals[showPicker.type || 'bedtime']?.split(':')[0] || '0'),
+              parseInt(goals[showPicker.type || 'bedtime']?.split(':')[1] || '0')
+            )
+          }
+          onChange={handleTimeChange}
+        />
+      )}
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -407,35 +488,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 5,
   },
-  presetSection: {
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  presetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 15,
-  },
-  presetContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  presetButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  presetButtonText: {
-    fontSize: 14,
-    color: '#4A90E2',
-    fontWeight: '500',
-  },
   saveContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
@@ -459,6 +511,23 @@ const styles = StyleSheet.create({
   },
   saveButtonTextDisabled: {
     color: '#999',
+  },
+  // New style for web time input to match native TextInput
+  webTimeInput: {
+    width: '100%',
+    fontSize: 18,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 0, // Remove default border
+    backgroundColor: '#f8f8f8',
+    color: '#333',
+    textAlign: 'right',
+    // Add box shadow for consistency with native
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
 });
 
