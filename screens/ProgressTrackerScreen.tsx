@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Conditional SVG imports with fallbacks
 let Svg: any, Path: any, Circle: any, Line: any, SvgText: any, Rect: any;
@@ -110,79 +111,150 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
   // User goals state - in real app, this would come from global state/context
   const [userGoals, setUserGoals] = useState<UserGoals>({
     weight: 60,
-    steps: 10000,
+    steps: 6000,
     calories: 2000,
     water: 2000
   });
 
-  // Sample data with consistent structure
-  const weightData: DataPoint[] = [
-    { date: '2024-01', value: 73, weight: 73 },
-    { date: '2024-02', value: 73, weight: 73 },
-    { date: '2024-03', value: 72, weight: 72 },
-    { date: '2024-04', value: 70, weight: 70 },
-    { date: '2024-05', value: 65, weight: 65 },
-    { date: '2024-06', value: 60, weight: 60 }
-  ];
+  const goalsData = async () => {
+    const user_id = await AsyncStorage.getItem('user_id');
+    try{
+      const response = await fetch(`http://localhost:3000/goals/${user_id}`);
+      if(response.ok){
+        const data = await response.json();
+        setUserGoals(data);
+      }
+    }catch(err){
+      console.log('Failed to fetch data!', err);
+    }
+  }
 
-  const stepsData: DataPoint[] = [
-    { date: '1', value: 8500, steps: 8500 },
-    { date: '2', value: 9200, steps: 9200 },
-    { date: '3', value: 3200, steps: 3200 },
-    { date: '4', value: 7400, steps: 7400 },
-    { date: '5', value: 6800, steps: 6800 },
-    { date: '6', value: 4500, steps: 4500 },
-    { date: '7', value: 3800, steps: 3800 },
-    { date: '8', value: 5800, steps: 5800 },
-    { date: '9', value: 2100, steps: 2100 },
-    { date: '10', value: 11200, steps: 11200 },
-    { date: '11', value: 4200, steps: 4200 },
-    { date: '12', value: 9800, steps: 9800 }
-  ];
+  // API data with consistent structure
+  const [caloriesDataFromAPI, setCaloriesDataFromAPI] = useState<DataPoint[]>([]);
+  const [waterDataFromAPI, setWaterDataFromAPI] = useState<DataPoint[]>([]);
+  const [stepsDataFromAPI, setStepsDataFromAPI] = useState<DataPoint[]>([]);
+  const [weightDataFromAPI, setWeightDataFromAPI] = useState<DataPoint[]>([]);
 
-  const calorieData: DataPoint[] = [
-    { date: '1', value: 1800, calories: 1800 },
-    { date: '2', value: 2100, calories: 2100 },
-    { date: '3', value: 1400, calories: 1400 },
-    { date: '4', value: 1900, calories: 1900 },
-    { date: '5', value: 1700, calories: 1700 },
-    { date: '6', value: 1600, calories: 1600 },
-    { date: '7', value: 1500, calories: 1500 },
-    { date: '8', value: 1750, calories: 1750 },
-    { date: '9', value: 1200, calories: 1200 },
-    { date: '10', value: 2300, calories: 2300 },
-    { date: '11', value: 1550, calories: 1550 },
-    { date: '12', value: 2050, calories: 2050 }
-  ];
-
-  const waterData: DataPoint[] = [
-    { date: '1', value: 1800, water: 1800 },
-    { date: '2', value: 2100, water: 2100 },
-    { date: '3', value: 1200, water: 1200 },
-    { date: '4', value: 1600, water: 1600 },
-    { date: '5', value: 1400, water: 1400 },
-    { date: '6', value: 1300, water: 1300 },
-    { date: '7', value: 1100, water: 1100 },
-    { date: '8', value: 1500, water: 1500 },
-    { date: '9', value: 900, water: 900 },
-    { date: '10', value: 2200, water: 2200 },
-    { date: '11', value: 1250, water: 1250 },
-    { date: '12', value: 1950, water: 1950 }
-  ];
+  const periodMap: Record<string, string> = {
+  '日': 'day',
+  '週': 'week',
+  '月': 'month',
+  '6ヶ月': '6months',
+  '年': 'year',
+};
 
   const tabs: string[] = ['体重', '歩数', '摂取カロリー', '水分摂取量'];
-  const periods: string[] = ['日', '週', '月', '6ヶ月', '年'];
+  const periods: string[] = Object.keys(periodMap);
 
   // Load user goals on mount (in real app, this would be from AsyncStorage or context)
   useEffect(() => {
-    console.log('ProgressTrackerScreen mounted');
-    console.log('Active tab:', activeTab);
-    console.log('SVG available:', !!Svg);
-    
-    // Simulate loading user goals
-    // In real implementation:
-    // loadUserGoalsFromStorage().then(setUserGoals);
-  }, [activeTab]);
+  if (activeTab === '水分摂取量') {
+    const fetchWaterData = async () => {
+      try {
+        const user_id = 'e591a'; // 🔁 thay bằng user thực tế
+        const mode = periodMap[selectedPeriod] || 'month'; // hoặc từ selectedPeriod
+
+        const response = await fetch(`http://localhost:3000/water_data/${mode}?user_id=${user_id}`);
+        const json = await response.json();
+
+        // Trường hợp API trả về dạng { labels: [...], data: [...] }
+        const formatted = json.labels.map((label: string, index: number) => ({
+          date: label,
+          value: json.data[index],
+          water: json.data[index] // 👈 thêm trường `water` để dùng trong biểu đồ
+        }));
+
+        setWaterDataFromAPI(formatted);
+      } catch (error) {
+        console.error('Failed to fetch water data:', error);
+      }
+    };
+
+    fetchWaterData();
+  }
+}, [activeTab, selectedPeriod]);
+
+
+  useEffect(() => {
+  if (activeTab === '摂取カロリー') {
+    const fetchCalorieData = async () => {
+      try {
+        const user_id = 'e591a'; // thay bằng id thật
+        const mode = periodMap[selectedPeriod] || 'month'; // hoặc selectedPeriod tương ứng
+
+        const response = await fetch(`http://localhost:3000/calories_data/${mode}?user_id=${user_id}`);
+        const json = await response.json();
+
+        const formatted = json.labels.map((label: string, index: number) => ({
+          date: label,
+          value: json.data[index],
+          calories: json.data[index], // thêm trường calories để dùng trong biểu đồ
+        }));
+
+        setCaloriesDataFromAPI(formatted);
+      } catch (error) {
+        console.error('Failed to fetch calorie data:', error);
+      }
+    };
+
+    fetchCalorieData();
+  }
+}, [activeTab, selectedPeriod]);
+
+
+  useEffect(() => {
+  if (activeTab === '歩数') {
+    const fetchStepsData = async () => {
+      try {
+        const user_id = 'e591a'; // thay bằng id thật
+        const mode = periodMap[selectedPeriod] || 'month'; // ví dụ 'month', 'week', etc.
+
+        const response = await fetch(`http://localhost:3000/steps_data/${mode}?user_id=${user_id}`);
+        const json = await response.json();
+
+        const formatted = json.labels.map((label: string, index: number) => ({
+          date: label,
+          value: json.data[index],
+          steps: json.data[index], // thêm trường steps để vẽ biểu đồ
+        }));
+
+        setStepsDataFromAPI(formatted);
+      } catch (error) {
+        console.error('Failed to fetch steps data:', error);
+      }
+    };
+
+    fetchStepsData();
+  }
+}, [activeTab, selectedPeriod]);
+
+
+  useEffect(() => {
+  if (activeTab === '体重') {
+    const fetchWeightData = async () => {
+      try {
+        const user_id = 'e591a'; // Thay bằng user id thực tế
+        const mode = periodMap[selectedPeriod] || 'month'; // '日', '週', '月', '6ヶ月', '年' có thể map thành 'day', 'week', 'month', '6months', 'year' tùy backend
+
+        const response = await fetch(`http://localhost:3000/weight_data/${mode}?user_id=${user_id}`);
+        const json = await response.json();
+
+        const formatted = json.labels.map((label: string, index: number) => ({
+          date: label,
+          value: json.data[index],
+          weight: json.data[index], // thêm trường weight để biểu đồ weight sử dụng
+        }));
+
+        setWeightDataFromAPI(formatted);
+      } catch (error) {
+        console.error('Failed to fetch weight data:', error);
+      }
+    };
+
+    fetchWeightData();
+  }
+}, [activeTab, selectedPeriod]);
+
 
   // Path creation for line charts
   const createPath = useCallback((data: DataPoint[]): string => {
@@ -224,17 +296,34 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
 
   // Data getter with dynamic goals
   const getCurrentData = useCallback((): TabData => {
-    console.log('Getting current data for tab:', activeTab);
-    
-    const dataMap: Record<string, TabData> = {
-      '体重': { data: weightData, goal: userGoals.weight, unit: 'kg', goalLabel: '目標体重' },
-      '歩数': { data: stepsData, goal: userGoals.steps, unit: '歩', goalLabel: '目標歩数' },
-      '摂取カロリー': { data: calorieData, goal: userGoals.calories, unit: 'kcal', goalLabel: '目標カロリー' },
-      '水分摂取量': { data: waterData, goal: userGoals.water, unit: 'ml', goalLabel: '目標水分量' }
-    };
+  const dataMap: Record<string, TabData> = {
+    '体重': { 
+      data: weightDataFromAPI, 
+      goal: userGoals.weight, 
+      unit: 'kg', 
+      goalLabel: '目標体重' },
+    '歩数': { 
+      data: stepsDataFromAPI, 
+      goal: userGoals.steps, 
+      unit: '歩', 
+      goalLabel: '目標歩数' },
+    '摂取カロリー': {
+      data: caloriesDataFromAPI,
+      goal: userGoals.calories,
+      unit: 'kcal',
+      goalLabel: '目標カロリー'
+      },
+    '水分摂取量': {
+      data: waterDataFromAPI,
+      goal: userGoals.water,
+      unit: 'ml',
+      goalLabel: '目標水分量'
+}
+  };
 
-    return dataMap[activeTab] || dataMap['体重'];
-  }, [activeTab, userGoals]);
+  return dataMap[activeTab] || dataMap['体重'];
+}, [activeTab, userGoals, weightDataFromAPI, stepsDataFromAPI, caloriesDataFromAPI, waterDataFromAPI]);
+
 
   const currentData = getCurrentData();
 
@@ -255,14 +344,14 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
         {Svg && typeof Svg === 'function' ? (
           <Svg width={screenWidth - 80} height={200} viewBox="0 0 300 150">
             <Path
-              d={createPath(weightData)}
+              d={createPath(weightDataFromAPI)}
               fill="none"
               stroke="#4A90E2"
               strokeWidth="2"
             />
             
-            {weightData.map((point, index) => {
-              const x = (index / Math.max(1, weightData.length - 1)) * 280 + 10;
+            {weightDataFromAPI.map((point, index) => {
+              const x = (index / Math.max(1, weightDataFromAPI.length - 1)) * 280 + 10;
               const y = 120 - ((point.weight! - 55) / 20) * 100;
               
               return (
@@ -293,9 +382,9 @@ const ProgressTrackerScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.fallbackChart}>
             <Text style={styles.fallbackText}>
               📊 体重チャート
-              {'\n\n'}現在: {weightData[weightData.length - 1]?.weight || 0}kg
+              {'\n\n'}現在: {weightDataFromAPI[weightDataFromAPI.length - 1]?.weight || 0}kg
               {'\n'}目標: {userGoals.weight}kg
-              {'\n\n'}推移: {weightData.map(d => `${d.weight}kg`).join(' → ')}
+              {'\n\n'}推移: {weightDataFromAPI.map(d => `${d.weight}kg`).join(' → ')}
             </Text>
           </View>
         )}

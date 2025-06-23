@@ -13,7 +13,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+ 
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -28,9 +28,9 @@ type RootStackParamList = {
   DailyHealthScreen: undefined;
   UserProfileScreen: undefined;
 };
-
+ 
 type Props = NativeStackScreenProps<RootStackParamList, 'UserProfileScreen'>;
-
+ 
 const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -39,13 +39,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
-
+ 
   const onUpdatePress = async () => {
       const userId = await AsyncStorage.getItem('user_id');
       const token = await AsyncStorage.getItem('token');
     try{
       if (!userId) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
-
+ 
       const fullData = {
         user_name: name,
         email: email,
@@ -54,7 +54,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         height: parseInt(height),
         weight: parseInt(weight)
       }
-      
+     
       const response = await fetch(`http://localhost:3000/users/update_data/${userId}`, {
         method: 'PATCH',
         headers: {
@@ -71,16 +71,16 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('エラー', errorData.message || 'プロフィールの更新に失敗しました。');
     }
     }catch(error){
-      console.error('Error during update:', error); 
+      console.error('Error during update:', error);
     }
   };
-
-  
+ 
+ 
   const selectGender = (selectedGender: string) => {
     setGender(selectedGender);
     setShowGenderDropdown(false);
   };
-
+ 
    const getCurrentRouteName = () => {
     try {
       const state = navigation.getState();
@@ -90,7 +90,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
       return '';
     }
   };
-
+ 
   const userData = async () => {
       const userId = await AsyncStorage.getItem('user_id');
       const token = await AsyncStorage.getItem('token');
@@ -104,31 +104,31 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
       });
       if(response.ok){
         const data = await response.json();
-
+ 
         setName(data.user_name);
         setEmail(data.email);
-        setAge(data.age);
         setGender(data.gender);
-        setHeight(data.height);
-        setWeight(data.weight);
+        setAge(data.age?.toString() || '');
+        setHeight(data.height?.toString() || '');
+        setWeight(data.weight?.toString() || '');
       }
     }catch(error){
       console.log("Unable to fetch user's data from database", error)
     }
   }
-
+ 
   useEffect(() => {
     userData();
   }, []);
-
+ 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>       
+      <ScrollView contentContainerStyle={styles.scrollContainer}>      
         {/* Avatar Placeholder */}
         <View style={styles.avatarContainer}>
           <View style={styles.avatarPlaceholder} />
         </View>
-
+ 
         {/* Form Fields */}
         <View style={styles.formContainer}>
           {/* Name Field */}
@@ -141,7 +141,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
               placeholder="名前を入力"
             />
           </View>
-
+ 
           {/* Email Field */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>メールアドレス</Text>
@@ -153,7 +153,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
               keyboardType="email-address"
             />
           </View>
-
+ 
           {/* Age and Gender Row */}
           <View style={styles.rowContainer}>
             <View style={styles.halfField}>
@@ -166,7 +166,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 keyboardType="numeric"
               />
              </View>
-
+ 
   <View style={styles.halfField}>
     <Text style={styles.fieldLabel}>性別</Text>
     <View style={styles.textInput}>
@@ -174,7 +174,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   </View>
 </View>
-
+ 
           {/* Height and Weight Row */}
           <View style={styles.rowContainer}>
             <View style={styles.halfField}>
@@ -205,13 +205,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
         </View>
-
+ 
         {/* Update Button */}
         <TouchableOpacity style={styles.updateButton} onPress={onUpdatePress}>
           <Text style={styles.updateButtonText}>更新</Text>
         </TouchableOpacity>
       </ScrollView>
-
+ 
       {/* Gender Selection Modal */}
       <Modal
         visible={showGenderDropdown}
@@ -219,9 +219,9 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         animationType="fade"
         onRequestClose={() => setShowGenderDropdown(false)}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
           onPress={() => setShowGenderDropdown(false)}
         >
           <View style={styles.modalContent}>
@@ -241,7 +241,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </Modal>
-      
+     
  {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
             <View style={styles.bottomNav}>
               <TouchableOpacity
@@ -251,13 +251,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
                 onPress={() => navigation.navigate('ReminderScreen')}
               >
-                <Ionicons 
-                  name="time-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"} 
+                <Ionicons
+                  name="time-outline"
+                  size={24}
+                  color={getCurrentRouteName() === 'ReminderScreen' ? "#8B7CF6" : "#666"}
                 />
               </TouchableOpacity>
-      
+     
               <TouchableOpacity
                 style={[
                   styles.navItem,
@@ -265,13 +265,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
                 onPress={() => navigation.navigate('ProgressTrackerScreen')}
               >
-                <Ionicons 
-                  name="stats-chart-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"} 
+                <Ionicons
+                  name="stats-chart-outline"
+                  size={24}
+                  color={getCurrentRouteName() === 'ProgressTrackerScreen' ? "#8B7CF6" : "#666"}
                 />
               </TouchableOpacity>
-      
+     
               <TouchableOpacity
                 style={[
                   styles.navItem,
@@ -279,13 +279,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
                 onPress={() => navigation.navigate('HomeScreen')}
               >
-                <Ionicons 
-                  name="home" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"} 
+                <Ionicons
+                  name="home"
+                  size={24}
+                  color={getCurrentRouteName() === 'HomeScreen' ? "#8B7CF6" : "#666"}
                 />
               </TouchableOpacity>
-      
+     
               <TouchableOpacity
                 style={[
                   styles.navItem,
@@ -293,13 +293,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
                 onPress={() => navigation.navigate('DailyHealthScreen')}
               >
-                <Ionicons 
-                  name="create-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"} 
+                <Ionicons
+                  name="create-outline"
+                  size={24}
+                  color={getCurrentRouteName() === 'DailyHealthScreen' ? "#8B7CF6" : "#666"}
                 />
               </TouchableOpacity>
-      
+     
               <TouchableOpacity
                 style={[
                   styles.navItem,
@@ -307,22 +307,22 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
                 onPress={() => navigation.navigate('UserProfileScreen')}
               >
-                <Ionicons 
-                  name="person-outline" 
-                  size={24} 
-                  color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"} 
+                <Ionicons
+                  name="person-outline"
+                  size={24}
+                  color={getCurrentRouteName() === 'UserProfileScreen' ? "#8B7CF6" : "#666"}
                 />
               </TouchableOpacity>
             </View>
           </SafeAreaView>
   );
 };
-
+ 
 const styles = StyleSheet.create({
    activeNavItem: {
     opacity: 1,
   },
-
+ 
   container: {
     flex: 1,
     backgroundColor: '#f8f4ff',
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   halfField: {
     width: '48%',
   },
-
+ 
   dropdownButton: {
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -524,3 +524,4 @@ const styles = StyleSheet.create({
   },
 });
 export default UserProfileScreen;
+ 

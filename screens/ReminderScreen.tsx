@@ -47,6 +47,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
       console.log('iOS notification permission granted!');
     }
 
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '水分補給',
@@ -86,6 +87,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
     });
     return true;
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
