@@ -26,12 +26,11 @@ type RootStackParamList = {
   ProgressTrackerScreen: undefined;
   DailyHealthScreen: undefined;
   UserProfileScreen: undefined;
-  GoalSetting: undefined;
 };
 
 type GoalSettingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'GoalSetting'
+  'GoalSettingScreen'
 >;
 
 interface Props {

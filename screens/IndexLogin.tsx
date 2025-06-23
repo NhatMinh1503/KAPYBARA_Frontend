@@ -13,7 +13,7 @@ export default function VitualPetLogin({ navigation }: Props) {
       <Text style={styles.title}>Virtual Pet</Text>
       <Text style={styles.description}>ペットと一緒に、健康的な毎日を楽しもう！</Text>
       <Image
-        source={require('../assets/rabbit.png')}
+        source={require('../assets/loginpet.png')}
         style={styles.image}
         resizeMode="contain"
       />

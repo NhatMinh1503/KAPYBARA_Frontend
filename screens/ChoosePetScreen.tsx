@@ -13,9 +13,9 @@ export default function ChoosePetScreen({ navigation }: Props) {
   const { petData, setPetData } = usePetRegister();
 
   const pets = [
-    { id: 1, source: require('../assets/genki.png') },
-    { id: 2, source: require('../assets/tsukare.png') },
-    { id: 3, source: require('../assets/byoki.png') },
+    { id: 1, source: require('../assets/pet1.png') },
+    { id: 2, source: require('../assets/pet3.png') },
+    { id: 3, source: require('../assets/pet2.png') },
   ];
 
   const handleNext = () => {
@@ -43,9 +43,10 @@ export default function ChoosePetScreen({ navigation }: Props) {
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={styles.buttonText} onPress={handleNext}>
-        選択
-      </Text>
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
+  <Text style={styles.buttonText}>選択</Text>
+</TouchableOpacity>
+
     </View>
   );
 }
@@ -55,6 +56,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F3FF',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingTop: 60,
   },
   title: {
@@ -77,18 +79,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#D9D4FF',
   },
   petImage: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     resizeMode: 'contain',
   },
-  buttonText: {
-    marginTop: 40,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    backgroundColor: '#6C63FF',
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-  },
+  button: {
+  backgroundColor: '#8B7CF6',
+  paddingVertical: 14,
+  borderRadius: 25,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+  marginTop: 40,
+  width: '100%',         // ⬅️ tombol 100% lebar
+  maxWidth: 900,
+  alignSelf: 'center',   // ⬅️ agar center saat width 100%
+},
+
+buttonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: 'bold',
+  letterSpacing: 1,
+},
 });
