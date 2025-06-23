@@ -19,14 +19,31 @@ interface ForgotPasswordScreenProps {
 export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
   const [email, setEmail] = useState<string>('');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!email) {
       Alert.alert('Error', 'Silakan masukkan alamat email Anda.');
       return;
+    };
+
+    try {
+    const response = await fetch('http://localhost:3000/email/request_reset_password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if(response.ok){
+      Alert.alert('Request has been sent!', `Your OTP has been sent to ${email}`);
+      navigation.navigate('VerifyOTPScreen', { email });
     }
-    console.log('Mengirim permintaan reset kata sandi untuk:', email);
-    Alert.alert('Permintaan Terkirim', `Instruksi reset kata sandi telah dikirim ke ${email}.`);
-    navigation.goBack();
+
+    }catch(err){
+      console.error('Failed to send requst!', err);
+    }
   };
 
   const handleGoBack = () => {

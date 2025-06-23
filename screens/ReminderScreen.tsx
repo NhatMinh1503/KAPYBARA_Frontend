@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Platform } from
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -23,6 +24,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ReminderScreen'>;
 const ReminderScreen: React.FC<Props> = ({ navigation }) => {
   const [waterReminderActive, setWaterReminderActive] = useState(false);
   const [eyeReminderActive, setEyeReminderActive] = useState(false);
+  const [ sleepTime, setSleepTime ] = useState('');
 
    const getCurrentRouteName = () => {
     try {
@@ -58,6 +60,49 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
     });
     return true;
   };
+
+  const setupRemainderSleep = async () =>{
+    const user_id = await AsyncStorage.getItem('user_id');
+    const { status } = await Notifications.requestPermissionsAsync();
+    if(status !== 'granted'){
+      alert('通知の許可が必要です！');
+      return;
+    }
+
+    if(Platform.OS === 'ios'){
+      console.log('iOS notification permission granted!');
+    }
+    
+    try{
+      const response = await fetch(`http://localhost:3000/goals/${user_id}`);
+      if(response.ok){
+        const data = await response.json();
+        const sleepTime = data.sleepTime;
+        setSleepTime(sleepTime);
+
+        const [hourStr, minuteStr] = sleepTime.split(':');
+        const hour = parseInt(hourStr, 10);
+        const minute = parseInt(minuteStr, 10);
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '就寝時間リマインド',
+            body: '眠いよ～ 寝ましょう！',
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+            hour,
+            minute,
+            repeats: true,
+          },
+        });
+        return true;
+      }
+    }catch(err){
+      console.error('Error to fetch data', err);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -105,7 +150,17 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
               styles.toggleSwitch,
               eyeReminderActive ? styles.toggleActive : styles.toggleInactive,
             ]}
-            onPress={() => setEyeReminderActive(prev => !prev)}
+            onPress={async () => {
+              if(!eyeReminderActive){
+                 const success = await setupRemainderSleep();
+                if(success){
+                  setEyeReminderActive(true);
+                }
+              }else{
+                await Notifications.cancelAllScheduledNotificationsAsync();
+                setEyeReminderActive(false);
+              }
+            }}
           >
             <View
               style={[

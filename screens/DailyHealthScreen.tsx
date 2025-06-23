@@ -139,20 +139,35 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
       const newCarbs = updatedFoods.reduce((sum, food) => sum + food.carbs * food.quantity, 0);
       const newProtein = updatedFoods.reduce((sum, food) => sum + food.protein * food.quantity, 0);
       const newTotalCalories = updatedFoods.reduce((sum, food) => sum + food.calories * food.quantity, 0);
-      const newPercentage = Math.round(((newFat + newCarbs + newProtein) / 100) * 100);
- 
-      return {
-        ...prev,
-        [mealType]: {
-          fat: newFat,
-          carbs: newCarbs,
-          protein: newProtein,
-          totalCalories: newTotalCalories,
-          percentage: newPercentage,
-          foods: updatedFoods
-        },
-      };
-    });
+      const newPercentage =  Math.round((newTotalCalories / goalCalories) * 100);
+
+       const newMeals = {
+          ...prev,
+          [mealType]: {
+            fat: newFat,
+            carbs: newCarbs,
+            protein: newProtein,
+            totalCalories: newTotalCalories,
+            percentage: newPercentage,
+            foods: updatedFoods
+          }
+        };
+
+        const allTotalCalories = Object.values(newMeals).reduce(
+          (sum, meal) => sum + meal.totalCalories,
+          0
+        );
+
+        (async () => {
+          try {
+            await AsyncStorage.setItem('@calories', allTotalCalories.toString());
+          } catch (err) {
+            console.error('Failed to save calories to Async Storage', err);
+          }
+        })();
+
+        return newMeals;
+      });
   }, []);
  
   const updateFoodQuantity = useCallback((mealType: MealType, foodId: string, delta: number) => {
@@ -230,18 +245,8 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     return { ...total, percentage };
   };
  
-  const saveTotalCalories = async () => {
-    const total = calculateTotalNutrition();
-    try {
-      await AsyncStorage.setItem('@calories', total.totalCalories.toString());
-    } catch (err) {
-      console.error('Error to save calories to Storage', err);
-    }
-  }
- 
   const saveMealsToStorage = async () => {
     try {
-      saveTotalCalories();
       const key = `@meals:${getLogDate()}`;
       await AsyncStorage.setItem(key, JSON.stringify(meals));
     } catch (err) {
@@ -284,8 +289,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
   };
   const resetStoredData = async () => {
     try {
-      const nutrition = calculateTotalNutrition();
-      const calories = nutrition.totalCalories;
+      const calories = parseInt(await AsyncStorage.getItem('@calories') ?? '0');
       const water = parseInt(await AsyncStorage.getItem('@waterIntake') ?? '0');
       const steps = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
  
@@ -313,9 +317,6 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
   const resetIfNewDay = useCallback(async () => {
     const today = getLogDate();
     const lastReset = await AsyncStorage.getItem('lastResetDate');
- 
-    console.log('Today:', today);
-    console.log('Last Reset:', lastReset);
  
     if (!lastReset || lastReset !== today) {
       await fetchGoals();
@@ -366,6 +367,32 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
       loadRemainingSteps();
     }, [])
   );
+
+  useEffect(() => {
+    const goalCall = async () => {
+      const value = parseInt(await AsyncStorage.getItem('@goalCalories') || '0', 10);
+      setGoalCalories(value);
+    };
+    goalCall();
+  });
+
+  useEffect(() => {
+  const checkAsyncStorage = async () => {
+    const calories = await AsyncStorage.getItem('@calories');
+    const meals = await AsyncStorage.getItem(`@meals:${getLogDate()}`);
+    const water = await AsyncStorage.getItem('@waterIntake');
+    const steps = await AsyncStorage.getItem('@stepsIntake');
+
+    console.log('🍽 Calories:', calories);
+    console.log('🍱 Meals:', JSON.parse(meals || '{}'));
+    console.log('💧 Water Intake:', water);
+    console.log('🚶 Steps:', steps);
+  };
+
+  checkAsyncStorage();
+}, []);
+
+
  
   const total = calculateTotalNutrition();
  
@@ -429,16 +456,6 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     );
   };
 
-  useEffect(() => {
-    const goalCall = async () => {
-      const value = parseInt(await AsyncStorage.getItem('@goalCalories') || '0', 10);
-      setGoalCalories(value);
-    };
-    goalCall();
-  })
-
-
- 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />

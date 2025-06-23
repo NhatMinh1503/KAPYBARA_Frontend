@@ -35,13 +35,15 @@ const CustomToggle: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ 
 const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   const route = useRoute<SelectFoodRouteProp>();
   const mealsType = route.params.mealType;
-  const onSave = route.params.onSave;
+  // const onSave = route.params.onSave;
+  const { mealType, onSave } = route.params;
+
 
   const [searchText, setSearchText] = useState('');
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [foodItems, setFoodItems] = useState<FoodItemDetailed[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const mealType: MealType = mealsType || 'breakfast';
+  // const mealType: MealType = mealsType || 'breakfast';
 
   const fetchFoodData = async () => {
     if(searchText.trim() === '') {
@@ -78,8 +80,8 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
         name: data.description || 'Unknown Food',
         totalCalories: getNutrientValue('Energy'),
         protein: getNutrientValue('Protein'),
-        fat: getNutrientValue('Total lipid (fat)'), // <-- Make sure the backend provides this!
-        carbs: getNutrientValue('Carbohydrate'),   // <-- Make sure the backend provides this!
+        fat: getNutrientValue('Total lipid (fat)'),
+        carbs: getNutrientValue('Carbohydrate'),   
         isEnabled: false,
       }
       setFoodItems([foodItem]);
@@ -147,8 +149,14 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
       })),
     };
 
-    onSave(mealData);
-    navigation.goBack();
+     if (onSave) {
+        onSave(mealData);
+      } else {
+        console.warn('⚠️ onSave is undefined!');
+      }
+
+      navigation.goBack();
+
   };
 
   // Safe filtering with null checks
