@@ -28,7 +28,7 @@ type RootStackParamList = {
   DailyHealthScreen: undefined;
   UserProfileScreen: undefined;
 };
-
+ 
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'HomeScreen'
@@ -46,8 +46,6 @@ interface WeatherData {
   loading: boolean;
   error: string | null;
 }
-
-
  
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [weatherData, setWeatherData] = useState<WeatherData>({
@@ -58,18 +56,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     error: null,
   });
 
-
-const animations = [
+  const animations = [
   require('../assets/animations/robot-waving.json'),
   require('../assets/animations/robot-waving1.json'),
   require('../assets/animations/robot-waving3.json'),
 ];
 
 const [animationIndex, setAnimationIndex] = useState(0);
- 
+
 const handleAnimationChange = () => {
   setAnimationIndex((prevIndex) => (prevIndex + 1) % animations.length);
 };
+
   // Function to fetch data from API
     const fetchWeatherData = async () => {
       try{
@@ -191,7 +189,6 @@ const handleAnimationChange = () => {
  
       {/* Character Illustration */}
       <View style={styles.illustrationContainer}>
-        {/* Tempat untuk gambar kelinci dengan payung */}
         <TouchableOpacity onPress={handleAnimationChange}>
         <LottieView
           source={animations[animationIndex]}
@@ -200,6 +197,7 @@ const handleAnimationChange = () => {
           style={{ width: 380, height: 380 }}
         />
       </TouchableOpacity>
+        
       </View>
  
       {/* Message Button */}
