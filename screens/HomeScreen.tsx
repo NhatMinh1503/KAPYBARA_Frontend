@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
- 
+import LottieView from 'lottie-react-native';
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -55,6 +55,19 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     loading: true,
     error: null,
   });
+
+  const animations = [
+  require('../assets/animations/robot-waving.json'),
+  require('../assets/animations/robot-waving1.json'),
+  require('../assets/animations/robot-waving3.json'),
+];
+
+const [animationIndex, setAnimationIndex] = useState(0);
+
+const handleAnimationChange = () => {
+  setAnimationIndex((prevIndex) => (prevIndex + 1) % animations.length);
+};
+
   // Function to fetch data from API
     const fetchWeatherData = async () => {
       try{
@@ -176,18 +189,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
  
       {/* Character Illustration */}
       <View style={styles.illustrationContainer}>
-        {/* Tempat untuk gambar kelinci dengan payung */}
-        <View style={styles.characterPlaceholder}>
-          {/* Ganti dengan Image component untuk gambar kamu */}
-          {/* <Image
-            source={require('./assets/rabbit-umbrella.png')}
-            style={styles.characterImage}
-            resizeMode="contain"
-          /> */}
-          <Text style={styles.placeholderText}>
-            Tempat untuk gambar{'\n'}kelinci dengan payung
-          </Text>
-        </View>
+        <TouchableOpacity onPress={handleAnimationChange}>
+        <LottieView
+          source={animations[animationIndex]}
+          autoPlay
+          loop
+          style={{ width: 380, height: 380 }}
+        />
+      </TouchableOpacity>
+        
       </View>
  
       {/* Message Button */}
