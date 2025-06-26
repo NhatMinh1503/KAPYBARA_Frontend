@@ -94,9 +94,9 @@ const styles = StyleSheet.create({
   shadowRadius: 4,
   elevation: 3,
   marginTop: 40,
-  width: '100%',         // ⬅️ tombol 100% lebar
+  width: '100%',         
   maxWidth: 900,
-  alignSelf: 'center',   // ⬅️ agar center saat width 100%
+  alignSelf: 'center', 
 },
 
 buttonText: {

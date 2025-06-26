@@ -7,43 +7,37 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
 
-interface ForgotPasswordScreenProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'ForgotPasswordScreen'>;
-}
+type VerifyOTPScreenProps = NativeStackScreenProps<RootStackParamList, 'VerifyOTPScreen'>;
 
-export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
-  const [email, setEmail] = useState<string>('');
+export default function VerifyOTPScreen({ navigation, route }: VerifyOTPScreenProps) {
+  const { email } = route.params;
+  const [otp, setOtp] = useState('');
 
-  const handleSubmit = async () => {
-    if (!email) {
-      Alert.alert('エラー', 'メールアドレスを入力してください。');
-      return;
-    };
-
+  const handleVerify = async () => {
     try {
-      const response = await fetch('http://localhost:3000/email/request_reset_password', {
+      const response = await fetch('http://localhost:3000/email/verify_otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, otp }),
       });
 
       const data = await response.json();
 
-      if(response.ok){
-        Alert.alert('送信完了', `OTPコードを${email}に送信しました。`);
-        navigation.navigate('VerifyOTPScreen', { email });
+      if (response.ok && data.success) {
+        Alert.alert('認証成功', 'パスワードを再設定してください');
+        navigation.navigate('ResetPasswordScreen', { email, otp });
+      } else {
+        Alert.alert('認証エラー', data.error || '無効なコードです');
       }
-
-    } catch(err) {
-      console.error('送信に失敗しました', err);
-      Alert.alert('エラー', '送信に失敗しました。再度お試しください。');
+    } catch (err) {
+      console.error('エラー:', err);
     }
   };
 
@@ -56,21 +50,27 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
       <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
         <Ionicons name="chevron-back" size={28} color="#000" />
       </TouchableOpacity>
-
-      <Text style={styles.title}>メールアドレスを入力してください</Text>
+      <Text style={styles.title}>確認コードを入力してください</Text>
 
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="確認コード（6桁）"
         placeholderTextColor="#999"
-        keyboardType="email-address"
+        keyboardType="numeric"
+        maxLength={6}
         autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
+        value={otp}
+        onChangeText={setOtp}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>送信</Text>
+      <TouchableOpacity style={{ marginBottom: 20, alignSelf: 'flex-end' }} onPress={() => navigation.navigate('ForgotPasswordScreen')}>
+        <Text style={styles.text}>
+          確認コードが届いていませんか？ <Text style={styles.resendText}>再送信する</Text>
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleVerify}>
+        <Text style={styles.buttonText}>確認する</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -131,5 +131,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  text: {
+    color: '#000000',
+    fontWeight: 'normal',
+    fontSize: 14,
+    textAlign: 'right',
+  },
+  resendText: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });

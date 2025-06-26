@@ -659,9 +659,9 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   mealSectionCard: {
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 12,
-    marginVertical: 8, 
+    backgroundColor: '#FFFFFF', // Latar belakang putih
+    borderRadius: 12, // Sudut membulat untuk kartu meal
+    marginVertical: 8, // Spasi vertikal antar kartu meal
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
-  mealName: { 
+  mealName: { // Ini adalah gaya lama untuk meal name di foodItemRow, mungkin perlu disesuaikan atau dihapus
     fontSize: 14,
     color: '#000',
     fontWeight: '400',
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#8B7CF6',
+    backgroundColor: '#8B7CF6', // Warna ungu yang lebih menonjol
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -882,3 +882,5 @@ const styles = StyleSheet.create({
 });
  
 export default DailyHealthScreen;
+ 
+ 

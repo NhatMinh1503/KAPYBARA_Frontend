@@ -519,11 +519,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 15,
     borderRadius: 8,
-    borderWidth: 0, // Remove default border
+    borderWidth: 0, 
     backgroundColor: '#f8f8f8',
     color: '#333',
     textAlign: 'right',
-    // Add box shadow for consistency with native
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,

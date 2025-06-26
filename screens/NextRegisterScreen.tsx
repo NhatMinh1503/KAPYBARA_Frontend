@@ -8,14 +8,15 @@ import {
   Image,
   Platform,
   Alert,
-  SafeAreaView
+  SafeAreaView,
+  ScrollView,
+  Modal,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUserRegister } from '../contexts/UserRegisterContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons'; // Untuk ikon panah kembali
+import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   Register2: undefined;
@@ -39,9 +40,10 @@ export default function Register2() {
   const [health, setHealth] = useState('元気');
   const [steps, setSteps] = useState('');
   const [goalWeight, setGoalWeight] = useState('');
-  const [sleepTime, setSleepTime] = useState('');
-  const [wakeupTime, setWakeTime] = useState('');
+  const [sleepTime, setSleepTime] = useState('23:00');
+  const [wakeupTime, setWakeTime] = useState('07:00');
   const [waterIntake, setWaterIntake] = useState('');
+  const [isGoalModalVisible, setGoalModalVisible] = useState(false);
 
   const healthOptions = [
     { label: '元気', image: require('../assets/genki.png') },
@@ -49,8 +51,13 @@ export default function Register2() {
     { label: '病気', image: require('../assets/byoki.png') },
   ];
 
+  const goalOptions = [
+    { label: '体重を落としたい', value: '体重を落としたい' },
+    { label: '筋肉をつけたい', value: '筋肉をつけたい' },
+    { label: '健康維持したい', value: '健康維持したい' },
+  ];
+
   const handleRegister = async () => {
-    // Number validation
     if (isNaN(parseInt(weight))) {
       Alert.alert("入力エラー", "体重を正しく入力してください。");
       return;
@@ -111,214 +118,269 @@ export default function Register2() {
     }
   };
 
+  const selectedGoalLabel = goalOptions.find(opt => opt.value === goal)?.label || '選択してください';
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F3FF' }}>
-      <View style={styles.container}>
-  {/* Tombol Kembali ( "<" ) */}
-  <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-    <Ionicons name="chevron-back" size={24} color="#333" />
-  </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.container}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color="#333" />
+          </TouchableOpacity>
 
-  {/* Tombol Maju ( ">" )
-  <TouchableOpacity onPress={() => navigation.navigate('ChoosePetScreen')}>
-    <Ionicons name="chevron-forward" size={24} color="#333" />
-  </TouchableOpacity> */}
+          <Text style={styles.title}>もう少しおしえてね！</Text>
 
-        <Text style={styles.title}>もう少しおしえてね！</Text>
-
-        {/* Tinggi Badan & Berat Badan Saat Ini */}
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>身長</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder=""
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                value={height}
-                onChangeText={setHeight}
-              />
-              <Text style={styles.unitInside}>cm</Text>
+          <View style={styles.inputGroup}>
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>身長</Text>
+                <View style={styles.inputWithUnit}>
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder=""
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={height}
+                    onChangeText={setHeight}
+                  />
+                  <Text style={styles.unitInside}>cm</Text>
+                </View>
+              </View>
+              <View style={styles.half}>
+                <Text style={styles.label}>今の体重</Text>
+                <View style={styles.inputWithUnit}>
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder=""
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={weight}
+                    onChangeText={setWeight}
+                  />
+                  <Text style={styles.unitInside}>kg</Text>
+                </View>
+              </View>
             </View>
           </View>
-          <View style={styles.half}>
-            <Text style={styles.label}>今の体重</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder=""
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                value={weight}
-                onChangeText={setWeight}
-              />
-              <Text style={styles.unitInside}>kg</Text>
+
+          <View style={styles.inputGroup}>
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>目標</Text>
+                <TouchableOpacity
+                  style={styles.modalToggleButton}
+                  onPress={() => setGoalModalVisible(true)}
+                >
+                  <Text style={goal ? styles.modalToggleTextSelected : styles.modalToggleText}>
+                    {selectedGoalLabel}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#333" style={styles.dropdownIcon} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.half}>
+                <Text style={styles.label}>目標体重</Text>
+                <View style={styles.inputWithUnit}>
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder=""
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={goalWeight}
+                    onChangeText={setGoalWeight}
+                  />
+                  <Text style={styles.unitInside}>kg</Text>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Baris 1: Tujuan dan Target Berat Badan */}
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>目標</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={goal}
-                onValueChange={(itemValue) => setGoal(itemValue)}
-                style={styles.picker}
-                dropdownIconColor="#333"
-                mode="dropdown"
+          <View style={styles.inputGroup}>
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>目標歩数</Text>
+                <View style={styles.inputWithUnit}>
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder=""
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={steps}
+                    onChangeText={setSteps}
+                  />
+                  <Text style={styles.unitInside}>歩</Text>
+                </View>
+              </View>
+
+              <View style={styles.half}>
+                <Text style={styles.label}>水分摂取</Text>
+                <View style={styles.inputWithUnit}>
+                  <TextInput
+                    style={styles.inputInner}
+                    placeholder=""
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={waterIntake}
+                    onChangeText={setWaterIntake}
+                  />
+                  <Text style={styles.unitInside}>ml</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>就寝時間</Text>
+                <View style={styles.inputWithUnit}>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="time"
+                      value={sleepTime}
+                      onChange={(e) => setSleepTime(e.target.value)}
+                      style={styles.webTimeInput}
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.inputInner}
+                      placeholder="00:00"
+                      placeholderTextColor="#999"
+                      value={sleepTime}
+                      onChangeText={setSleepTime}
+                    />
+                  )}
+                </View>
+              </View>
+              <View style={styles.half}>
+                <Text style={styles.label}>起床時間</Text>
+                <View style={styles.inputWithUnit}>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="time"
+                      value={wakeupTime}
+                      onChange={(e) => setWakeTime(e.target.value)}
+                      style={styles.webTimeInput}
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.inputInner}
+                      placeholder="00:00"
+                      placeholderTextColor="#999"
+                      value={wakeupTime}
+                      onChangeText={setWakeTime}
+                    />
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <Text style={[styles.label, { marginTop: 20 }]}>今の健康状態</Text>
+          <View style={styles.healthRow}>
+            {healthOptions.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.healthItem,
+                  health === option.label && styles.selectedHealth,
+                ]}
+                onPress={() => setHealth(option.label)}
               >
-                <Picker.Item label="▼ 選択してください" value="" color="#999" />
-                <Picker.Item label="体重を落としたい" value="体重を落としたい" />
-                <Picker.Item label="筋肉をつけたい" value="筋肉をつけたい" />
-                <Picker.Item label="健康維持したい" value="健康維持したい" />
-              </Picker>
-            </View>
+                <Image source={option.image} style={styles.icon} />
+                <Text style={styles.healthLabel}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          <View style={styles.half}>
-            <Text style={styles.label}>目標体重</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder=""
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                value={goalWeight}
-                onChangeText={setGoalWeight}
-              />
-              <Text style={styles.unitInside}>kg</Text>
-            </View>
-          </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              if (!goal) {
+                Alert.alert('Peringatan', 'Tujuan harus dipilih.');
+                return;
+              }
+              handleRegister();
+            }}
+          >
+
+            <Text style={styles.buttonText}>登録</Text>
+          </TouchableOpacity>
         </View>
+      </ScrollView>
 
-        {/* Baris 2: Target Langkah dan Asupan Air */}
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>目標歩数</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder=""
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                value={steps}
-                onChangeText={setSteps}
-              />
-              <Text style={styles.unitInside}>歩</Text>
-            </View>
-          </View>
-
-          <View style={styles.half}>
-            <Text style={styles.label}>水分摂取</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder=""
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                value={waterIntake}
-                onChangeText={setWaterIntake}
-              />
-              <Text style={styles.unitInside}>ml</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Waktu Tidur & Waktu Bangun (Baris terpisah) */}
-        <View style={styles.row}>
-          <View style={styles.half}>
-            <Text style={styles.label}>就寝時間</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder="00:00"
-                placeholderTextColor="#999"
-                value={sleepTime}
-                onChangeText={setSleepTime}
-              />
-              <Text style={styles.unitInside}>{Platform.OS === 'ios' ? 'AM' : ''}</Text>
-            </View>
-          </View>
-          <View style={styles.half}>
-            <Text style={styles.label}>起床時間</Text>
-            <View style={styles.inputWithUnit}>
-              <TextInput
-                style={styles.inputInner}
-                placeholder="00:00"
-                placeholderTextColor="#999"
-                value={wakeupTime}
-                onChangeText={setWakeTime}
-              />
-              <Text style={styles.unitInside}>{Platform.OS === 'ios' ? 'AM' : ''}</Text>
-            </View>
-
-          </View>
-        </View>
-
-        {/* Kondisi Kesehatan */}
-        <Text style={[styles.label, { marginTop: 20 }]}>今の健康状態</Text>
-        <View style={styles.healthRow}>
-          {healthOptions.map((option, index) => (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isGoalModalVisible}
+        onRequestClose={() => setGoalModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>目標を選択してください</Text>
+            {goalOptions.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.modalOption}
+                onPress={() => {
+                  setGoal(option.value);
+                  setGoalModalVisible(false);
+                }}
+              >
+                <Text style={styles.modalOptionText}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
             <TouchableOpacity
-              key={index}
-              style={[
-                styles.healthItem,
-                health === option.label && styles.selectedHealth,
-              ]}
-              onPress={() => setHealth(option.label)}
+              style={styles.modalCloseButton}
+              onPress={() => setGoalModalVisible(false)}
             >
-              <Image source={option.image} style={styles.icon} />
-              <Text style={styles.healthLabel}>{option.label}</Text>
+              <Text style={styles.modalCloseButtonText}>キャンセル</Text>
             </TouchableOpacity>
-          ))}
+          </View>
         </View>
-
-        {/* Tombol Daftar */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            if (!goal) {
-              Alert.alert('Peringatan', 'Tujuan harus dipilih.');
-              return;
-            }
-            handleRegister();
-          }}
-        >
-          <Text style={styles.buttonText}>登録</Text>
-        </TouchableOpacity>
-      </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F7F3FF',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F7F3FF',
     padding: 24,
+    paddingTop: Platform.OS === 'ios' ? 80 : 40,
     justifyContent: 'center',
   },
   backButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20, // Sesuaikan posisi untuk iOS/Android
+    top: Platform.OS === 'ios' ? 50 : 20,
     left: 24,
     zIndex: 1,
+    padding: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 28,
-    color: 'black',
+    marginBottom: 35,
+    color: '#333',
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+  },
+  inputGroup: {
+    marginBottom: 16,
   },
   inputWithUnit: {
     position: 'relative',
@@ -328,64 +390,73 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#D0CDE1',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    paddingRight: 32,
-    marginBottom: 8,
+    paddingRight: 36,
     color: '#000',
-    fontSize: 15,
+    fontSize: 16,
+    height: 50,
   },
   unitInside: {
     position: 'absolute',
     right: 14,
     fontSize: 14,
-    color: '#000',
+    color: '#666',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 16,
-    marginBottom: 16,
   },
   half: {
     flex: 1,
   },
-  pickerContainer: {
+  modalToggleButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#D0CDE1',
-    borderRadius: 8,
-    marginBottom: 8,
-    height: Platform.OS === 'ios' ? 50 : 48,
-    justifyContent: 'center',
-    paddingHorizontal: Platform.OS === 'ios' ? 6 : 0,
-    overflow: 'hidden',
+    borderRadius: 10,
+    height: 50,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
   },
-  picker: {
-    height: Platform.OS === 'ios' ? 180 : 48,
-    width: '100%',
+  modalToggleText: {
+    color: '#999',
+    fontSize: 16,
+  },
+  modalToggleTextSelected: {
+    color: '#000',
+    fontSize: 16,
+  },
+  dropdownIcon: {
+    marginLeft: 10,
   },
   healthRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginVertical: 16,
-    marginBottom: 28,
+    marginTop: 10,
+    marginBottom: 35,
   },
   healthItem: {
     alignItems: 'center',
-    padding: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
   },
   selectedHealth: {
-    borderColor: '#CFC6FF',
-    borderWidth: 2,
-    borderRadius: 12,
-    backgroundColor: '#E8E0FF',
+    borderColor: '#8B7CF6',
+    backgroundColor: '#EEEDFF',
   },
   healthLabel: {
-    marginTop: 4,
+    marginTop: 6,
     fontSize: 13,
     color: '#333',
+    fontWeight: '500',
   },
   icon: {
     width: 60,
@@ -394,19 +465,79 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#8B7CF6',
-    paddingVertical: 14,
-    borderRadius: 25,
+    paddingVertical: 16,
+    borderRadius: 30,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 4,
+    marginTop: 20,
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 18,
+    letterSpacing: 1.2,
+  },
+  webTimeInput: {
+    width: '100%',
     fontSize: 16,
-    letterSpacing: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D0CDE1',
+    backgroundColor: '#fff',
+    color: '#000',
+    height: 50,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 25,
+    width: '85%',
+    maxHeight: '70%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalOption: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    alignItems: 'center',
+  },
+  modalOptionText: {
+    fontSize: 17,
+    color: '#333',
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    backgroundColor: '#E8E0FF',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#8B7CF6',
   },
 });

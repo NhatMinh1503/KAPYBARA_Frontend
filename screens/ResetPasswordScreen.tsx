@@ -7,48 +7,45 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
 
-interface ForgotPasswordScreenProps {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'ForgotPasswordScreen'>;
-}
+type ResetPasswordScreenProps = NativeStackScreenProps<RootStackParamList, 'ResetPasswordScreen'>;
 
-export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
-  const [email, setEmail] = useState<string>('');
+export default function ResetPasswordScreen({ route, navigation }: ResetPasswordScreenProps) {
+  const { email, otp } = route.params;
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
 
-  const handleSubmit = async () => {
-    if (!email) {
-      Alert.alert('エラー', 'メールアドレスを入力してください。');
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  const handleReset = async () => {
+    if (password !== confirm) {
+      Alert.alert('パスワードが一致しません。');
       return;
-    };
+    }
 
     try {
-      const response = await fetch('http://localhost:3000/email/request_reset_password', {
+      const response = await fetch('http://localhost:3000/email/reset_password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, otp, newPassword: password }),
       });
 
-      const data = await response.json();
-
-      if(response.ok){
-        Alert.alert('送信完了', `OTPコードを${email}に送信しました。`);
-        navigation.navigate('VerifyOTPScreen', { email });
+      if (response.ok) {
+        const data = await response.json();
+        Alert.alert('パスワードが変更されました！');
+        navigation.navigate('VirtualPetLogin');
       }
-
-    } catch(err) {
-      console.error('送信に失敗しました', err);
-      Alert.alert('エラー', '送信に失敗しました。再度お試しください。');
+    } catch (err) {
+      console.log('パスワードのリセットに失敗しました:', err);
     }
-  };
-
-  const handleGoBack = () => {
-    navigation.goBack();
   };
 
   return (
@@ -57,20 +54,25 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
         <Ionicons name="chevron-back" size={28} color="#000" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>メールアドレスを入力してください</Text>
+      <Text style={styles.title}>新しいパスワードを入力してください</Text>
 
       <TextInput
         style={styles.input}
-        placeholder=""
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
+        placeholder="新しいパスワード"
+        secureTextEntry
+        onChangeText={setPassword}
+        value={password}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="パスワードを再入力"
+        secureTextEntry
+        onChangeText={setConfirm}
+        value={confirm}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>送信</Text>
+      <TouchableOpacity style={styles.button} onPress={handleReset}>
+        <Text style={styles.buttonText}>パスワードを変更する</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

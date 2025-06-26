@@ -50,4 +50,13 @@ export type RootStackParamList = {
     mealType: MealType;
     onSave: (data: MealData) => void;
   };
+  VerifyOTPScreen: 
+  {
+    email: String;
+  };
+  ResetPasswordScreen: 
+  {
+    email: String;
+    otp: String;
+  };
 };
