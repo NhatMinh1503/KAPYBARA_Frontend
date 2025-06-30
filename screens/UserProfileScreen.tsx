@@ -206,9 +206,12 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
  
-        {/* Update Button */}
+        
         <TouchableOpacity style={styles.updateButton} onPress={onUpdatePress}>
           <Text style={styles.updateButtonText}>更新</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.updateButton} onPress={() => navigation.navigate('IndexLogin')}>
+          <Text style={styles.updateButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
  

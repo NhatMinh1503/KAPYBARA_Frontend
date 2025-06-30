@@ -376,21 +376,21 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     goalCall();
   });
  
-  useEffect(() => {
-  const checkAsyncStorage = async () => {
-    const calories = await AsyncStorage.getItem('@calories');
-    const meals = await AsyncStorage.getItem(`@meals:${getLogDate()}`);
-    const water = await AsyncStorage.getItem('@waterIntake');
-    const steps = await AsyncStorage.getItem('@stepsIntake');
+//   useEffect(() => {
+//   const checkAsyncStorage = async () => {
+//     const calories = await AsyncStorage.getItem('@calories');
+//     const meals = await AsyncStorage.getItem(`@meals:${getLogDate()}`);
+//     const water = await AsyncStorage.getItem('@waterIntake');
+//     const steps = await AsyncStorage.getItem('@stepsIntake');
  
-    console.log('🍽 Calories:', calories);
-    console.log('🍱 Meals:', JSON.parse(meals || '{}'));
-    console.log('💧 Water Intake:', water);
-    console.log('🚶 Steps:', steps);
-  };
+//     console.log('🍽 Calories:', calories);
+//     console.log('🍱 Meals:', JSON.parse(meals || '{}'));
+//     console.log('💧 Water Intake:', water);
+//     console.log('🚶 Steps:', steps);
+//   };
  
-  checkAsyncStorage();
-}, []);
+//   checkAsyncStorage();
+// }, []);
  
  
  
@@ -406,8 +406,8 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     const mealName = mealNameMap[mealKey];
  
     return (
-      <View key={mealKey} style={styles.mealSectionCard}> {/* Menggunakan gaya baru untuk kartu meal */}
-        {/* Meal name with Add button */}
+      <View key={mealKey} style={styles.mealSectionCard}> 
+       
         <View style={styles.mealHeaderRow}>
           <Text style={styles.mealNameTitle}>{mealName}</Text>
           <TouchableOpacity
@@ -417,18 +417,18 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
           </TouchableOpacity>
         </View>
  
-        {/* Food items */}
+        
         {mealData.foods.map((food) => (
-          <View key={food.id} style={styles.foodItemRegularRow}> {/* Gaya biasa tanpa border/shadow */}
-            {/* Food Name and Calories */}
+          <View key={food.id} style={styles.foodItemRegularRow}> 
+            
             <View style={styles.foodDetails}>
-              <Text style={styles.foodName}>{food.name}</Text>
+              <Text style={styles.foodName}>{String(food.name)}</Text>
               <Text style={styles.foodCalories}>
                 {Math.round(food.calories * food.quantity)} kcal
               </Text>
             </View>
  
-            {/* Quantity Controls and Remove Button */}
+            
             <View style={styles.foodActions}>
               <TouchableOpacity
                 onPress={() => updateFoodQuantity(mealKey, food.id, -1)}
@@ -460,7 +460,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Water Intake Section */}
+       
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>水分摂取</Text>
@@ -479,7 +479,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
           <Text style={styles.goalText}>目標まであと {remainingWater} ml必要です!</Text>
         </View>
  
-        {/* Steps Section */}
+       
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>歩数</Text>
@@ -498,29 +498,29 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
           <Text style={styles.goalText}>目標まであと {remainingSteps} 歩必要です！</Text>
         </View>
  
-        {/* Meals Section */}
+       
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>食事</Text>
  
-          {/* Nutrition Headers */}
+         
           <View style={styles.mealHeader}>
             <Text style={styles.mealHeaderText}>脂質</Text>
-            <Text style={styles.mealHeaderText}> 炭水</Text>
+            <Text style={styles.mealHeaderText}>炭水</Text>
             <Text style={styles.mealHeaderText}>た質</Text>
             <Text style={styles.mealHeaderText}>摂取%</Text>
             <Text style={styles.mealHeaderText}>カロリー</Text>
           </View>
  
-          {/* Total Nutrition Row (only once) */}
+         
           <View style={styles.nutritionValuesRow}>
             <Text style={styles.nutritionValue}>{total.fat}g</Text>
-            <Text style={styles.nutritionValue}>{total.carbs}g</Text>
+            <Text style={styles.nutritionValue}>{Math.round(total.carbs)}g</Text>
             <Text style={styles.nutritionValue}>{total.protein}g</Text>
             <Text style={styles.nutritionValue}>{total.percentage}%</Text>
             <Text style={styles.calorieValue}>{total.totalCalories} kcal</Text>
           </View>
  
-          {/* Meals List */}
+        
           <View style={styles.mealsContainer}>
             {(Object.keys(meals) as MealType[]).map((key) =>
               renderMealSection(key, meals[key])
@@ -528,11 +528,11 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
           </View>
         </View>
  
-        {/* Add some bottom padding for the fixed navigation */}
+        
         <View style={styles.bottomPadding} />
       </ScrollView>
  
-      {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
+      
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={[

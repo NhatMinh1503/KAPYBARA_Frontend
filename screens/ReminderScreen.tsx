@@ -133,14 +133,14 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      
       <View style={styles.header}>
         <Text style={styles.title}>通知</Text>
       </View>
 
-      {/* Reminders */}
+      
       <View style={styles.content}>
-                {/* 食事リマインド (New Meal Reminder) */}
+                
         <View style={styles.reminderBox}>
           <Text style={styles.reminderText}>食事リマインド</Text>
           <TouchableOpacity
@@ -168,7 +168,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
-        {/* 水分補給リマインド */}
+       
         <View style={styles.reminderBox}>
           <Text style={styles.reminderText}>水分補給リマインド</Text>
           <TouchableOpacity
@@ -197,9 +197,9 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/*　就寝時間リマインド (Changed the text to be more general for now) */}
+        
         <View style={styles.reminderBox}>
-          <Text style={styles.reminderText}>就寝時間リマインド</Text> {/* Reverted text to "Eye fatigue reminder" */}
+          <Text style={styles.reminderText}>就寝時間リマインド</Text> 
           <TouchableOpacity
             style={[
               styles.toggleSwitch,
@@ -228,7 +228,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Bottom Navigation - FIXED: All buttons with proper color logic */}
+     
       <View style={styles.bottomNav}>
         <TouchableOpacity
           style={[

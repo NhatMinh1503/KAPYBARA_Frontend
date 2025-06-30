@@ -9,12 +9,11 @@ import {
   StatusBar,
   TextInput,
   Alert,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+ 
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -22,33 +21,31 @@ type RootStackParamList = {
   RegisterScreen: undefined;
   NextRegisterScreen: undefined;
   ChoosePetScreen: undefined;
-  LastRegisterScreen: undefined;
+  LastRegisterScreen:undefined;
   HomeScreen: undefined;
   ReminderScreen: undefined;
   ProgressTrackerScreen: undefined;
   DailyHealthScreen: undefined;
   UserProfileScreen: undefined;
-  GoalSettingScreen: undefined;
+  GoalSetting: undefined;
 };
-
+ 
 type GoalSettingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'GoalSettingScreen'
+  'GoalSetting'
 >;
-
+ 
 interface Props {
   navigation: GoalSettingScreenNavigationProp;
 }
-
+ 
 interface GoalData {
   weight: string;
   steps: string;
   calories: string;
   water: string;
-  bedtime?: string;
-  wakeup?: string;
 }
-
+ 
 interface GoalConfig {
   key: keyof GoalData;
   label: string;
@@ -59,21 +56,52 @@ interface GoalConfig {
   max: number;
   defaultValue: string;
 }
-
+ 
+// Default goals constant
 const defaultGoals: GoalData = {
-  weight: '60',
-  steps: '10000',
-  calories: '2000',
-  water: '2000',
-  bedtime: '23:00',
-  wakeup: '07:00',
+  weight: '0',
+  steps: '0',
+  calories: '0',
+  water: '0',
 };
-
+ 
 const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
   const [goals, setGoals] = useState<GoalData>(defaultGoals);
   const [hasChanges, setHasChanges] = useState(false);
-  const [showPicker, setShowPicker] = useState<{ type: 'bedtime' | 'wakeup' | null }>({ type: null });
-
+ 
+ 
+  //Function to get Goals from database
+  const goalsData = async () => {
+    const user_id = await AsyncStorage.getItem('user_id');
+    const token = await AsyncStorage.getItem('token');
+ 
+    try{
+      if (!user_id) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
+     
+      const response = await fetch(`http://localhost:3000/goals/${user_id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+ 
+        if(response.ok){
+          const data = await response.json();
+ 
+          setGoals({
+            weight: data.goalWeight?.toString() ?? '0',
+            steps: data.steps?.toString() ?? '0',
+            calories: data.goalCalories?.toString() ?? '0',
+            water: data.waterGoal?.toString() ?? '0'
+          });
+        }
+    } catch(err){
+      console.log("Failed to get goals", err);
+    }
+  };
+ 
+  // Goal configurations
   const goalConfigs: GoalConfig[] = [
     {
       key: 'weight',
@@ -116,25 +144,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       defaultValue: defaultGoals.water,
     },
   ];
-
-  const handleTimeChange = (event: any, selectedDate: Date | undefined) => {
-    if (!selectedDate) {
-      setShowPicker({ type: null });
-      return;
-    }
-    const hours = selectedDate.getHours().toString().padStart(2, '0');
-    const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
-    const formattedTime = `${hours}:${minutes}`;
-
-    if (showPicker.type === 'bedtime') {
-      setGoals((prev) => ({ ...prev, bedtime: formattedTime }));
-    } else if (showPicker.type === 'wakeup') {
-      setGoals((prev) => ({ ...prev, wakeup: formattedTime }));
-    }
-    setHasChanges(true);
-    setShowPicker({ type: null });
-  };
-
+ 
   const handleGoalChange = (key: keyof GoalData, value: string) => {
     // Filter hanya angka
     const numericValue = value.replace(/[^0-9]/g, '');
@@ -144,16 +154,16 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     }));
     setHasChanges(true);
   };
-
+ 
   const validateGoal = (config: GoalConfig, value: string): boolean => {
     const numValue = parseInt(value, 10);
     if (isNaN(numValue)) return false;
     return numValue >= config.min && numValue <= config.max;
   };
-
-  const handleSave = () => {
+ 
+  const handleSave = async () => {
     const validationErrors: string[] = [];
-
+ 
     goalConfigs.forEach((config) => {
       const value = goals[config.key];
       if (!value || !validateGoal(config, value)) {
@@ -162,14 +172,41 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
         );
       }
     });
-
+ 
     if (validationErrors.length > 0) {
       Alert.alert('入力エラー', validationErrors.join('\n'), [{ text: 'OK' }]);
       return;
     }
-
-    console.log('Saving goals:', goals);
-
+ 
+    const user_id = await AsyncStorage.getItem('user_id');
+    const token = await AsyncStorage.getItem('token');
+ 
+    try{
+      const response = await fetch(`http://localhost:3000/goal_setting/${user_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(
+          {
+            goalWeight : parseInt(goals.weight),
+            steps: parseInt(goals.steps),
+            goalCalories: parseInt(goals.calories),
+            goalWater: parseInt(goals.water)
+          })
+      });
+ 
+      if(response.ok){
+        Alert.alert('更新完了', '目標が保存されました');
+        setHasChanges(false);
+        navigation.goBack();
+      }
+    }catch(err){
+      console.error('Failed to update goals', err);
+      Alert.alert('エラー', '通信エラーが発生しました');
+    }
+ 
     Alert.alert('保存完了', '目標が保存されました', [
       {
         text: 'OK',
@@ -180,7 +217,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       },
     ]);
   };
-
+ 
   const handleReset = () => {
     Alert.alert('リセット確認', 'すべての目標をデフォルト値に戻しますか？', [
       { text: 'キャンセル', style: 'cancel' },
@@ -194,7 +231,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       },
     ]);
   };
-
+ 
   const handleBack = () => {
     if (hasChanges) {
       Alert.alert('未保存の変更', '変更内容が保存されていません。破棄しますか？', [
@@ -209,22 +246,26 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       navigation.goBack();
     }
   };
-
+ 
+  useEffect(() => {
+      goalsData();
+    }, []);
+ 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
-
+ 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
+         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+    <Ionicons name="chevron-back" size={24} color="#333" />
+  </TouchableOpacity>
         <Text style={styles.headerTitle}>目標設定</Text>
         <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
           <Text style={styles.resetButtonText}>リセット</Text>
         </TouchableOpacity>
       </View>
-
+ 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Info Card */}
         <View style={styles.infoCard}>
@@ -233,12 +274,12 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
             健康目標を設定してください。これらの目標は、グラフやレポートで進捗を追跡するために使用されます。
           </Text>
         </View>
-
+ 
         {/* Goal Settings */}
         {goalConfigs.map((config) => {
           const currentValue = goals[config.key];
           const isValid = currentValue && validateGoal(config, currentValue);
-
+ 
           return (
             <View key={config.key} style={styles.goalCard}>
               <View style={styles.goalHeader}>
@@ -248,10 +289,13 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
                 <Text style={styles.goalUnit}>{config.unit}</Text>
               </View>
-
+ 
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[styles.goalInput, !isValid && currentValue && styles.invalidInput]}
+                  style={[
+                    styles.goalInput,
+                    !isValid && currentValue && styles.invalidInput,
+                  ]}
                   value={currentValue}
                   onChangeText={(value) => handleGoalChange(config.key, value)}
                   placeholder={config.placeholder}
@@ -260,11 +304,11 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
                 />
                 <Text style={styles.inputUnit}>{config.unit}</Text>
               </View>
-
+ 
               <Text style={styles.goalRange}>
                 推奨範囲: {config.min} - {config.max} {config.unit}
               </Text>
-
+ 
               {!isValid && currentValue && (
                 <Text style={styles.errorText}>
                   {config.min} - {config.max} {config.unit}の範囲で入力してください
@@ -273,68 +317,8 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           );
         })}
-
-        {/* Bedtime Picker */}
-        <View style={styles.goalCard}>
-          <View style={styles.goalHeader}>
-            <View style={styles.goalTitleContainer}>
-              <Ionicons name="moon-outline" size={24} color="#4A90E2" />
-              <Text style={styles.goalTitle}>就寝時間</Text>
-            </View>
-            <Text style={styles.goalUnit}>HH:mm</Text>
-          </View>
-
-          {Platform.OS === 'web' ? (
-            <input
-              type="time"
-              value={goals.bedtime}
-              onChange={(e) => {
-                setGoals((prev) => ({ ...prev, bedtime: e.target.value }));
-                setHasChanges(true);
-              }}
-              style={styles.webTimeInput} // Apply web-specific style
-            />
-          ) : (
-            <TouchableOpacity
-              style={styles.inputContainer} // Apply existing input container style
-              onPress={() => setShowPicker({ type: 'bedtime' })}
-            >
-              <Text style={styles.goalInput}>{goals.bedtime}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Wakeup Picker */}
-        <View style={styles.goalCard}>
-          <View style={styles.goalHeader}>
-            <View style={styles.goalTitleContainer}>
-              <Ionicons name="sunny-outline" size={24} color="#4A90E2" />
-              <Text style={styles.goalTitle}>起床時間</Text>
-            </View>
-            <Text style={styles.goalUnit}>HH:mm</Text>
-          </View>
-
-          {Platform.OS === 'web' ? (
-            <input
-              type="time"
-              value={goals.wakeup}
-              onChange={(e) => {
-                setGoals((prev) => ({ ...prev, wakeup: e.target.value }));
-                setHasChanges(true);
-              }}
-              style={styles.webTimeInput} // Apply web-specific style
-            />
-          ) : (
-            <TouchableOpacity
-              style={styles.inputContainer} // Apply existing input container style
-              onPress={() => setShowPicker({ type: 'wakeup' })}
-            >
-              <Text style={styles.goalInput}>{goals.wakeup}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
       </ScrollView>
-
+ 
       {/* Save Button */}
       <View style={styles.saveContainer}>
         <TouchableOpacity
@@ -343,34 +327,20 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
           disabled={!hasChanges}
         >
           <Text
-            style={[styles.saveButtonText, !hasChanges && styles.saveButtonTextDisabled]}
+            style={[
+              styles.saveButtonText,
+              !hasChanges && styles.saveButtonTextDisabled,
+            ]}
           >
             目標を保存
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* DateTimePicker untuk iOS dan Android */}
-      {showPicker.type && Platform.OS !== 'web' && (
-        <DateTimePicker
-          mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          value={
-            new Date(
-              2024,
-              0,
-              1,
-              parseInt(goals[showPicker.type || 'bedtime']?.split(':')[0] || '0'),
-              parseInt(goals[showPicker.type || 'bedtime']?.split(':')[1] || '0')
-            )
-          }
-          onChange={handleTimeChange}
-        />
-      )}
     </SafeAreaView>
   );
 };
-
+ 
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -488,6 +458,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 5,
   },
+  presetSection: {
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  presetTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+  },
+  presetContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  presetButton: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  presetButtonText: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: '500',
+  },
   saveContainer: {
     paddingHorizontal: 20,
     paddingVertical: 15,
@@ -512,22 +511,6 @@ const styles = StyleSheet.create({
   saveButtonTextDisabled: {
     color: '#999',
   },
-  // New style for web time input to match native TextInput
-  webTimeInput: {
-    width: '100%',
-    fontSize: 18,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    borderWidth: 0, 
-    backgroundColor: '#f8f8f8',
-    color: '#333',
-    textAlign: 'right',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
 });
-
+ 
 export default GoalSettingScreen;
