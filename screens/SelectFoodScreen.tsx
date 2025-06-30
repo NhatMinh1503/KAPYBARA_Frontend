@@ -35,7 +35,6 @@ const CustomToggle: React.FC<{ isEnabled: boolean; onToggle: () => void }> = ({ 
 const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   const route = useRoute<SelectFoodRouteProp>();
   const mealsType = route.params.mealType;
-  // const onSave = route.params.onSave;
   const { mealType, onSave } = route.params;
 
 
@@ -43,14 +42,8 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [foodItems, setFoodItems] = useState<FoodItemDetailed[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  // const mealType: MealType = mealsType || 'breakfast';
 
   const fetchFoodData = async () => {
-    if(searchText.trim() === '') {
-      setFoodItems([]);
-      return;
-    }
-
     try {
       setIsLoading(true);
       const token = await AsyncStorage.getItem('token');
@@ -68,23 +61,19 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
       const data = await response.json();
       console.log('Fetched food data:', data);
 
-      const nutrients = Array.isArray(data.foodNutrients) ? data.foodNutrients : [];
+      const food = data[0];
 
-      const getNutrientValue = (nutrientName: string) => {
-        const nutrient = nutrients.find((n: any) => n.nutrientName.toLowerCase().includes(nutrientName.toLowerCase()));
-        return nutrient ? nutrient.value || 0 : 0; // Added fallback for undefined value
-      };
-
-      const foodItem: FoodItemDetailed = {
-        id: data.fdcId || Math.random().toString(), // Fallback ID
-        name: data.description || 'Unknown Food',
-        totalCalories: getNutrientValue('Energy'),
-        protein: getNutrientValue('Protein'),
-        fat: getNutrientValue('Total lipid (fat)'),
-        carbs: getNutrientValue('Carbohydrate'),   
+      const foodItems: FoodItemDetailed[] = data.map((food: any) => ({
+        id: food.food_id?.toString() || Math.random().toString(),
+        name: (food.fname || 'Unknown Food').trim(),
+        totalCalories: food.calories,
+        protein: food.protein,
+        fat: food.fat,
+        carbs: food.carbohidrates,
         isEnabled: false,
-      }
-      setFoodItems([foodItem]);
+      }));
+
+      setFoodItems(foodItems);
 
     } catch (error) {
       console.error('Fetch failed!', error);
@@ -160,9 +149,9 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   // Safe filtering with null checks
-  const filteredItems = Array.isArray(foodItems) ? foodItems.filter(item =>
-    item?.name?.toLowerCase().includes(searchText.toLowerCase())
-  ) : [];
+const filteredItems =
+  searchText.trim() === '' ? foodItems : foodItems.filter(item => item?.name?.toLowerCase().includes(searchText.trim().toLowerCase()));
+
 
   // Get meal name in Japanese
   const getMealName = (type: MealType): string => {

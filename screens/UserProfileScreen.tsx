@@ -210,6 +210,9 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity style={styles.updateButton} onPress={onUpdatePress}>
           <Text style={styles.updateButtonText}>更新</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.updateButton} onPress={() => navigation.navigate('IndexLogin')}>
+          <Text style={styles.updateButtonText}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
  
       {/* Gender Selection Modal */}
