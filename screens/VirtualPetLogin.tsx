@@ -96,6 +96,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.link}>こちら</Text>
         </TouchableOpacity>
       </View>
+
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>ログインする</Text>
       </TouchableOpacity>
@@ -186,14 +187,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   forgotPasswordRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: '#777',
-    fontSize: 13,
-  },
+  flexDirection: 'row',
+  justifyContent: 'flex-end',  
+  alignItems: 'center',
+  marginTop: 10,
+  marginBottom: 20,
+},
+forgotPasswordText: {
+  color: '#777',
+  fontSize: 13,
+},
 });

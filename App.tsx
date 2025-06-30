@@ -20,7 +20,7 @@ import UserProfileScreen from './screens/UserProfileScreen';
 import GoalSettingScreen from './screens/GoalSettingScreen';
 import SelectFoodScreen from './screens/SelectFoodScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
-import VerifyOTPSCreen from './screens/VerifyOTPScreen';
+import VerifyOTPScreen from './screens/VerifyOTPScreen';
 import ResetPasswordScreen from './screens/ResetPasswordScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -103,7 +103,7 @@ export default function App() {
             />
             <Stack.Screen
               name="VerifyOTPScreen"
-              component={VerifyOTPSCreen}
+              component={VerifyOTPScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

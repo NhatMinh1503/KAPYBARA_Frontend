@@ -206,7 +206,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
  
-        {/* Update Button */}
+        
         <TouchableOpacity style={styles.updateButton} onPress={onUpdatePress}>
           <Text style={styles.updateButtonText}>更新</Text>
         </TouchableOpacity>

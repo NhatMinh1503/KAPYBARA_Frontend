@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+ 
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -29,23 +29,23 @@ type RootStackParamList = {
   UserProfileScreen: undefined;
   GoalSetting: undefined;
 };
-
+ 
 type GoalSettingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'GoalSetting'
 >;
-
+ 
 interface Props {
   navigation: GoalSettingScreenNavigationProp;
 }
-
+ 
 interface GoalData {
   weight: string;
   steps: string;
   calories: string;
   water: string;
 }
-
+ 
 interface GoalConfig {
   key: keyof GoalData;
   label: string;
@@ -56,7 +56,7 @@ interface GoalConfig {
   max: number;
   defaultValue: string;
 }
-
+ 
 // Default goals constant
 const defaultGoals: GoalData = {
   weight: '0',
@@ -64,20 +64,20 @@ const defaultGoals: GoalData = {
   calories: '0',
   water: '0',
 };
-
+ 
 const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
   const [goals, setGoals] = useState<GoalData>(defaultGoals);
   const [hasChanges, setHasChanges] = useState(false);
-  
-
+ 
+ 
   //Function to get Goals from database
   const goalsData = async () => {
     const user_id = await AsyncStorage.getItem('user_id');
     const token = await AsyncStorage.getItem('token');
-
+ 
     try{
       if (!user_id) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
-      
+     
       const response = await fetch(`http://localhost:3000/goals/${user_id}`, {
           method: 'GET',
           headers: {
@@ -85,10 +85,10 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
             'Authorization': `Bearer ${token}`
           }
         });
-
+ 
         if(response.ok){
           const data = await response.json();
-
+ 
           setGoals({
             weight: data.goalWeight?.toString() ?? '0',
             steps: data.steps?.toString() ?? '0',
@@ -100,7 +100,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       console.log("Failed to get goals", err);
     }
   };
-
+ 
   // Goal configurations
   const goalConfigs: GoalConfig[] = [
     {
@@ -144,7 +144,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       defaultValue: defaultGoals.water,
     },
   ];
-
+ 
   const handleGoalChange = (key: keyof GoalData, value: string) => {
     // Filter hanya angka
     const numericValue = value.replace(/[^0-9]/g, '');
@@ -154,16 +154,16 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     }));
     setHasChanges(true);
   };
-
+ 
   const validateGoal = (config: GoalConfig, value: string): boolean => {
     const numValue = parseInt(value, 10);
     if (isNaN(numValue)) return false;
     return numValue >= config.min && numValue <= config.max;
   };
-
+ 
   const handleSave = async () => {
     const validationErrors: string[] = [];
-
+ 
     goalConfigs.forEach((config) => {
       const value = goals[config.key];
       if (!value || !validateGoal(config, value)) {
@@ -172,15 +172,15 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
         );
       }
     });
-
+ 
     if (validationErrors.length > 0) {
       Alert.alert('入力エラー', validationErrors.join('\n'), [{ text: 'OK' }]);
       return;
     }
-
+ 
     const user_id = await AsyncStorage.getItem('user_id');
     const token = await AsyncStorage.getItem('token');
-
+ 
     try{
       const response = await fetch(`http://localhost:3000/goal_setting/${user_id}`, {
         method: 'PATCH',
@@ -196,7 +196,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
             goalWater: parseInt(goals.water)
           })
       });
-
+ 
       if(response.ok){
         Alert.alert('更新完了', '目標が保存されました');
         setHasChanges(false);
@@ -206,7 +206,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       console.error('Failed to update goals', err);
       Alert.alert('エラー', '通信エラーが発生しました');
     }
-
+ 
     Alert.alert('保存完了', '目標が保存されました', [
       {
         text: 'OK',
@@ -217,7 +217,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       },
     ]);
   };
-
+ 
   const handleReset = () => {
     Alert.alert('リセット確認', 'すべての目標をデフォルト値に戻しますか？', [
       { text: 'キャンセル', style: 'cancel' },
@@ -231,7 +231,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       },
     ]);
   };
-
+ 
   const handleBack = () => {
     if (hasChanges) {
       Alert.alert('未保存の変更', '変更内容が保存されていません。破棄しますか？', [
@@ -246,15 +246,15 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
       navigation.goBack();
     }
   };
-
+ 
   useEffect(() => {
       goalsData();
     }, []);
-
+ 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
-
+ 
       {/* Header */}
       <View style={styles.header}>
          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -265,7 +265,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.resetButtonText}>リセット</Text>
         </TouchableOpacity>
       </View>
-
+ 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Info Card */}
         <View style={styles.infoCard}>
@@ -274,12 +274,12 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
             健康目標を設定してください。これらの目標は、グラフやレポートで進捗を追跡するために使用されます。
           </Text>
         </View>
-
+ 
         {/* Goal Settings */}
         {goalConfigs.map((config) => {
           const currentValue = goals[config.key];
           const isValid = currentValue && validateGoal(config, currentValue);
-
+ 
           return (
             <View key={config.key} style={styles.goalCard}>
               <View style={styles.goalHeader}>
@@ -289,7 +289,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
                 <Text style={styles.goalUnit}>{config.unit}</Text>
               </View>
-
+ 
               <View style={styles.inputContainer}>
                 <TextInput
                   style={[
@@ -304,11 +304,11 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
                 />
                 <Text style={styles.inputUnit}>{config.unit}</Text>
               </View>
-
+ 
               <Text style={styles.goalRange}>
                 推奨範囲: {config.min} - {config.max} {config.unit}
               </Text>
-
+ 
               {!isValid && currentValue && (
                 <Text style={styles.errorText}>
                   {config.min} - {config.max} {config.unit}の範囲で入力してください
@@ -318,7 +318,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
           );
         })}
       </ScrollView>
-
+ 
       {/* Save Button */}
       <View style={styles.saveContainer}>
         <TouchableOpacity
@@ -339,8 +339,8 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
-
+ 
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -512,5 +512,5 @@ const styles = StyleSheet.create({
     color: '#999',
   },
 });
-
+ 
 export default GoalSettingScreen;

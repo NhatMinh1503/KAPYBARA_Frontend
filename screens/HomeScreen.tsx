@@ -38,7 +38,6 @@ interface Props {
   navigation: HomeScreenNavigationProp;
 }
  
- 
 interface WeatherData {
   temperature: number | null;
   humidity: number | null;
@@ -367,6 +366,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
+    textAlign: 'center',
   },
   bottomNav: {
     flexDirection: 'row',

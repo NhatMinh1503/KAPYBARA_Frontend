@@ -21,28 +21,29 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
 
   const handleSubmit = async () => {
     if (!email) {
-      Alert.alert('Error', 'Silakan masukkan alamat email Anda.');
+      Alert.alert('エラー', 'メールアドレスを入力してください。');
       return;
     };
 
     try {
-    const response = await fetch('http://localhost:3000/email/request_reset_password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
+      const response = await fetch('http://localhost:3000/email/request_reset_password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if(response.ok){
-      Alert.alert('Request has been sent!', `Your OTP has been sent to ${email}`);
-      navigation.navigate('VerifyOTPScreen', { email });
-    }
+      if(response.ok){
+        Alert.alert('送信完了', `OTPコードを${email}に送信しました。`);
+        navigation.navigate('VerifyOTPScreen', { email });
+      }
 
-    }catch(err){
-      console.error('Failed to send requst!', err);
+    } catch(err) {
+      console.error('送信に失敗しました', err);
+      Alert.alert('エラー', '送信に失敗しました。再度お試しください。');
     }
   };
 
@@ -60,7 +61,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
 
       <TextInput
         style={styles.input}
-        placeholder="Email Anda"
+        placeholder=""
         placeholderTextColor="#999"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -118,6 +119,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 25,
     marginTop: 10,
+    width: '100%',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

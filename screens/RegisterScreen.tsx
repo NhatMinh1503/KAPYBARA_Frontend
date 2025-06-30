@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, SafeAreaView } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  SafeAreaView,
+  Modal,
+  ScrollView,
+} from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types'; // Sesuaikan jalur file types Anda
+import type { RootStackParamList } from '../types';
 import { UserRegisterProvider, useUserRegister } from '../contexts/UserRegisterContext';
-import { Ionicons } from '@expo/vector-icons'; // Untuk ikon panah kembali
+import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NextRegisterScreen'>;
@@ -18,6 +27,7 @@ export default function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('女性');
+  const [isGenderModalVisible, setGenderModalVisible] = useState(false);
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
@@ -33,120 +43,162 @@ export default function RegisterScreen({ navigation }: Props) {
     navigation.navigate('NextRegisterScreen');
   };
 
+  const selectGender = (selectedGender: string) => {
+    setGender(selectedGender);
+    setGenderModalVisible(false);
+  };
+
+  const genderOptions = [
+    { label: '女', value: '女性' },
+    { label: '男', value: '男性' },
+  ];
+
+  const selectedGenderLabel = genderOptions.find(opt => opt.value === gender)?.label || '';
+
   return (
     <UserRegisterProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#F7F3FF' }}>
-        <View style={styles.container}>
-          {/* Tombol Kembali */}
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#333" />
-          </TouchableOpacity>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.container}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={28} color="#333" />
+            </TouchableOpacity>
 
-          <Text style={styles.title}>バーチャルペット にようこそ！</Text>
+            <Text style={styles.title}>バーチャルペット にようこそ！</Text>
 
-          {/* Nama */}
-          <Text style={styles.label}>名前</Text>
-          <TextInput
-            style={[styles.input, focusedField === 'name' && styles.inputFocused]}
-            placeholder=""
-            value={name}
-            onChangeText={setName}
-            onFocus={() => setFocusedField('name')}
-            onBlur={() => setFocusedField(null)}
-          />
+            <Text style={styles.label}>名前</Text>
+            <TextInput
+              style={[styles.input, focusedField === 'name' && styles.inputFocused]}
+              placeholder=""
+              value={name}
+              onChangeText={setName}
+              onFocus={() => setFocusedField('name')}
+              onBlur={() => setFocusedField(null)}
+            />
 
-          {/* Alamat Email */}
-          <Text style={styles.label}>メールアドレス</Text>
-          <TextInput
-            style={[styles.input, focusedField === 'email' && styles.inputFocused]}
-            placeholder=""
-            value={email}
-            onChangeText={setEmail}
-            onFocus={() => setFocusedField('email')}
-            onBlur={() => setFocusedField(null)}
-            keyboardType="email-address"
-          />
+            <Text style={styles.label}>メールアドレス</Text>
+            <TextInput
+              style={[styles.input, focusedField === 'email' && styles.inputFocused]}
+              placeholder=""
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => setFocusedField('email')}
+              onBlur={() => setFocusedField(null)}
+              keyboardType="email-address"
+            />
 
-          {/* Kata Sandi */}
-          <Text style={styles.label}>パスワード</Text>
-          <TextInput
-            style={[styles.input, focusedField === 'password' && styles.inputFocused]}
-            placeholder=""
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            onFocus={() => setFocusedField('password')}
-            onBlur={() => setFocusedField(null)}
-          />
+            <Text style={styles.label}>パスワード</Text>
+            <TextInput
+              style={[styles.input, focusedField === 'password' && styles.inputFocused]}
+              placeholder=""
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setFocusedField('password')}
+              onBlur={() => setFocusedField(null)}
+            />
 
-          {/* Usia & Jenis Kelamin */}
-          <View style={styles.row}>
-            <View style={styles.half}>
-              <Text style={styles.label}>年齢</Text>
-              <View style={styles.ageRow}>
-                <TextInput
-                  style={[styles.input, focusedField === 'age' && styles.inputFocused, { flex: 1 }]}
-                  placeholder=""
-                  keyboardType="numeric"
-                  value={age}
-                  onChangeText={setAge}
-                  onFocus={() => setFocusedField('age')}
-                  onBlur={() => setFocusedField(null)}
-                />
-                <Text style={styles.unitInside}>歳</Text>
+            <View style={styles.row}>
+              <View style={styles.half}>
+                <Text style={styles.label}>年齢</Text>
+                <View style={styles.inputWithUnit}>
+                  <TextInput
+                    style={[styles.inputInner, focusedField === 'age' && styles.inputFocused]}
+                    placeholder=""
+                    keyboardType="numeric"
+                    value={age}
+                    onChangeText={setAge}
+                    onFocus={() => setFocusedField('age')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                  <Text style={styles.unitInside}>歳</Text>
+                </View>
+              </View>
+              <View style={styles.half}>
+                <Text style={styles.label}>性別</Text>
+                <TouchableOpacity
+                  style={styles.modalToggleButton}
+                  onPress={() => setGenderModalVisible(true)}
+                >
+                  <Text style={gender ? styles.modalToggleTextSelected : styles.modalToggleText}>
+                    {selectedGenderLabel}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#333" style={styles.dropdownIcon} />
+                </TouchableOpacity>
               </View>
             </View>
-            <View style={styles.half}>
-              <Text style={styles.label}>性別</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={gender}
-                  onValueChange={(itemValue) => setGender(itemValue)}
-                  style={styles.picker}
-                  dropdownIconColor="#333"
-                  mode="dropdown"
+
+            <TouchableOpacity style={styles.button} onPress={handleNext}>
+              <Text style={styles.buttonText}>次へ</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isGenderModalVisible}
+          onRequestClose={() => setGenderModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>性別を選択してください</Text>
+              {genderOptions.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.modalOption}
+                  onPress={() => selectGender(option.value)}
                 >
-                  <Picker.Item label="女" value="女性" />
-                  <Picker.Item label="男" value="男性" />
-                  <Picker.Item label="その他" value="その他" />
-                </Picker>
-              </View>
+                  <Text style={styles.modalOptionText}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setGenderModalVisible(false)}
+              >
+                <Text style={styles.modalCloseButtonText}>キャンセル</Text>
+              </TouchableOpacity>
             </View>
           </View>
-
-          {/* Tombol Selanjutnya */}
-          <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>次へ</Text>
-          </TouchableOpacity>
-        </View>
+        </Modal>
       </SafeAreaView>
     </UserRegisterProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F7F3FF',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   container: {
+    justifyContent: 'center',
     flex: 1,
     backgroundColor: '#F7F3FF',
     padding: 24,
-    justifyContent: 'center',
+    paddingTop: Platform.OS === 'ios' ? 80 : 40,
   },
   backButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20, // Sesuaikan posisi untuk iOS/Android
+    top: Platform.OS === 'ios' ? 50 : 20,
     left: 24,
-    zIndex: 1, // Pastikan tombol di atas konten lain
+    zIndex: 1,
+    padding: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 28,
-    color: 'black',
+    marginBottom: 35,
+    color: '#333',
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333',
     marginBottom: 8,
   },
@@ -154,12 +206,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#D0CDE1',
-    fontSize: 15,
+    fontSize: 16,
     marginBottom: 16,
     color: '#000',
+    height: 50,
   },
   inputFocused: {
     borderColor: '#8B7CF6',
@@ -174,47 +227,114 @@ const styles = StyleSheet.create({
   half: {
     flex: 1,
   },
-  ageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+  inputWithUnit: {
+    position: 'relative',
+    justifyContent: 'center',
+    height: 50,
   },
-  unitInside: {
-    position: 'absolute',
-    right: 10,
-    fontSize: 14,
-    color: '#000',
-  },
-  pickerContainer: {
+  inputInner: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#D0CDE1',
-    borderRadius: 8,
-    height: Platform.OS === 'ios' ? 50 : 48,
-    justifyContent: 'center',
-    paddingHorizontal: Platform.OS === 'ios' ? 6 : 0,
-    overflow: 'hidden',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    paddingRight: 36,
+    color: '#000',
+    fontSize: 16,
+    height: '100%',
   },
-  picker: {
-    height: Platform.OS === 'ios' ? 180 : 48,
-    width: '100%',
+  unitInside: {
+    position: 'absolute',
+    right: 14,
+    fontSize: 14,
+    color: '#666',
+  },
+  modalToggleButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D0CDE1',
+    borderRadius: 10,
+    height: 50,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+  },
+  modalToggleText: {
+    color: '#999',
+    fontSize: 16,
+  },
+  modalToggleTextSelected: {
+    color: '#000',
+    fontSize: 16,
+  },
+  dropdownIcon: {
+    marginLeft: 10,
   },
   button: {
     backgroundColor: '#8B7CF6',
-    paddingVertical: 14,
-    borderRadius: 25,
+    paddingVertical: 16,
+    borderRadius: 30,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 4,
     marginTop: 20,
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
     fontWeight: 'bold',
-    letterSpacing: 1,
+    fontSize: 18,
+    letterSpacing: 1.2,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 25,
+    width: '85%',
+    maxHeight: '70%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalOption: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    alignItems: 'center',
+  },
+  modalOptionText: {
+    fontSize: 17,
+    color: '#333',
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    backgroundColor: '#E8E0FF',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#8B7CF6',
   },
 });
