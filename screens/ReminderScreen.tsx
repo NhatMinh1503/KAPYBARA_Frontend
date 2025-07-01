@@ -25,7 +25,6 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
   const [waterReminderActive, setWaterReminderActive] = useState(false);
   const [eyeReminderActive, setEyeReminderActive] = useState(false);
   const [mealReminderActive, setMealReminderActive] = useState(false);
-  const [ sleepTime, setSleepTime ] = useState('');
 
   const getCurrentRouteName = () => {
     try {
@@ -135,31 +134,75 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
       const response = await fetch(`http://localhost:3000/goals/${user_id}`);
       if(response.ok){
         const data = await response.json();
-        const sleepTime = data.sleepTime;
-        setSleepTime(sleepTime);
+        const sleep = data.sleepTime;
+        const wakeup = data.wakeupTime;;
 
-        const [hourStr, minuteStr] = sleepTime.split(':');
-        const hour = parseInt(hourStr, 10);
-        const minute = parseInt(minuteStr, 10);
+        const [sleephourStr, sleepminuteStr] = sleep.split(':');
+        const sleephour = parseInt(sleephourStr, 10);
+        const sleepminute = parseInt(sleepminuteStr, 10);
+
+        const [wakehourStr, wakeminuteStr] = wakeup.split(':');
+        const wakehour = parseInt(wakehourStr, 10);
+        const wakeminute = parseInt(wakeminuteStr, 10);
+
 
         await Notifications.scheduleNotificationAsync({
           content: {
             title: '就寝時間リマインド',
             body: '眠いよ～ 寝ましょう！',
+            data: { purpose : 'sleep'}
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-            hour: hour,
-            minute: minute,
+            hour: sleephour,
+            minute: sleepminute,
             repeats: true,
           },
         });
+
+        await Notifications.scheduleNotificationAsync({
+           content: {
+            title: '起床時間リマインド',
+            body: '朝だよ！起きて！',
+            data: { purpose : 'wake up'}
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+            hour: wakehour,
+            minute: wakeminute,
+            repeats: true,
+          },
+        })
         return true;
       }
     }catch(err){
       console.error('Error to fetch data', err);
     }
   };
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(async response => {
+      const data = response.notification.request.content.data;
+      const clickTime = new Date().toISOString();
+      if(data.purpose === 'sleep'){
+        try{
+          await AsyncStorage.setItem('sleepTime', clickTime);
+        }catch(err){
+          console.error("Unable to save sleep time to Async Storage", err);
+        }
+      }
+
+      if(data.purpose === 'wake up'){
+        try{
+          await AsyncStorage.setItem('wakeupTime', clickTime);
+        }catch(err){
+          console.error("Unable to save wake up time to Async Storage", err);
+        }
+      }
+    })
+
+    return () => subscription.remove();
+  }, [])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -229,7 +272,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
 
         
         <View style={styles.reminderBox}>
-          <Text style={styles.reminderText}>就寝時間リマインド</Text> 
+          <Text style={styles.reminderText}>起床就寝時間リマインド</Text> 
           <TouchableOpacity
             style={[
               styles.toggleSwitch,
