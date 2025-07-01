@@ -75,14 +75,44 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
       console.log('iOS notification permission granted!');
     }
 
+    //Remainder for breakfast
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '食事の時間',
-        body: '食事をしましょう！',
+        title: '朝食の時間',
+        body: '朝ごはんをしましょう！',
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 300, // Example: 5 minutes for testing, adjust as needed
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+        hour: 7,
+        minute: 0,
+        repeats: true,
+      },
+    });
+
+    //Remainder for lunch
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '昼食の時間',
+        body: 'お昼ごはんをしましょう！',
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+        hour: 13,
+        minute: 0,
+        repeats: true,
+      },
+    });
+
+    //Remainder for dinner
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '夜食の時間',
+        body: '夜ごはんをしましょう！',
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+        hour: 19,
+        minute: 0,
         repeats: true,
       },
     });
@@ -119,8 +149,8 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-            hour,
-            minute,
+            hour: hour,
+            minute: minute,
             repeats: true,
           },
         });
