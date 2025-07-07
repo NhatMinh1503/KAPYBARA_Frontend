@@ -11,9 +11,10 @@ import {
   Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RouteProp, useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initHealthKit, getStepCount } from '../../Capybara_BE/services/healthkitService.js'; 
  
 // Import tipe dari file types.ts yang terpusat
 import { MealType, MealData, FoodItem, RootStackParamList } from '../types';
@@ -104,27 +105,27 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
  
   }, [waterIntake]);
  
-  const handleStepsIntake = useCallback(async () => {
-    const intake = parseInt(steps);
-    if (isNaN(intake) || intake < 0) {
-      return Alert.alert('無効な歩数', '正しい数値を入力してください。');
-    }
+  // const handleStepsIntake = useCallback(async () => {
+  //   const intake = parseInt(steps);
+  //   if (isNaN(intake) || intake < 0) {
+  //     return Alert.alert('無効な歩数', '正しい数値を入力してください。');
+  //   }
  
-    const currentIntake = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
-    const newIntake = currentIntake + intake;
+  //   const currentIntake = parseInt(await AsyncStorage.getItem('@stepsIntake') ?? '0');
+  //   const newIntake = currentIntake + intake;
  
-    await AsyncStorage.setItem('@stepsIntake', newIntake.toString());
-    setSteps('');
+  //   await AsyncStorage.setItem('@stepsIntake', newIntake.toString());
+  //   setSteps('');
  
-    const remaining = parseInt(await AsyncStorage.getItem('@remainingSteps') ?? '0');
-    const newRemaining = remaining - intake;
-    setRemainingSteps(newRemaining);
+  //   const remaining = parseInt(await AsyncStorage.getItem('@remainingSteps') ?? '0');
+  //   const newRemaining = remaining - intake;
+  //   setRemainingSteps(newRemaining);
  
-    await AsyncStorage.setItem('@remainingSteps', newRemaining.toString());
+  //   await AsyncStorage.setItem('@remainingSteps', newRemaining.toString());
  
-    Alert.alert('通知', '歩数を登録しました', [{ text: 'OK' }]);
+  //   Alert.alert('通知', '歩数を登録しました', [{ text: 'OK' }]);
  
-  }, [steps]);
+  // }, [steps]);
  
   const handleMealSave = useCallback((mealType: MealType, newData: MealData) => {
     setMeals(prev => {
@@ -375,24 +376,21 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     };
     goalCall();
   });
+
+  //useEffect to call the step from HealthKit
+  useEffect(() => {
+    const fetchSteps = async () => {
+      try {
+        await initHealthKit();
+        const stepCount = await getStepCount();
+        setSteps(stepCount.toString());
+      } catch (error) {
+        console.error('Failed to fetch steps from HealthKit:', error);
+      }
+    };
  
-//   useEffect(() => {
-//   const checkAsyncStorage = async () => {
-//     const calories = await AsyncStorage.getItem('@calories');
-//     const meals = await AsyncStorage.getItem(`@meals:${getLogDate()}`);
-//     const water = await AsyncStorage.getItem('@waterIntake');
-//     const steps = await AsyncStorage.getItem('@stepsIntake');
- 
-//     console.log('🍽 Calories:', calories);
-//     console.log('🍱 Meals:', JSON.parse(meals || '{}'));
-//     console.log('💧 Water Intake:', water);
-//     console.log('🚶 Steps:', steps);
-//   };
- 
-//   checkAsyncStorage();
-// }, []);
- 
- 
+    fetchSteps();
+  }, []);
  
   const total = calculateTotalNutrition();
  
@@ -488,7 +486,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
                 style={styles.input}
                 value={steps}
                 onChangeText={setSteps}
-                onSubmitEditing={handleStepsIntake}
+                // onSubmitEditing={handleStepsIntake}
                 placeholder=""
                 keyboardType="numeric"
               />

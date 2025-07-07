@@ -25,6 +25,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
   const [waterReminderActive, setWaterReminderActive] = useState(false);
   const [eyeReminderActive, setEyeReminderActive] = useState(false);
   const [mealReminderActive, setMealReminderActive] = useState(false);
+  const [sleepHour, setSleepHour] = useState('');
 
   const getCurrentRouteName = () => {
     try {
@@ -135,7 +136,12 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
       if(response.ok){
         const data = await response.json();
         const sleep = data.sleepTime;
-        const wakeup = data.wakeupTime;;
+        const wakeup = data.wakeupTime;
+
+        if(!sleep || !wakeup){
+          alert('就寝時間と起床時間を設定してください。');
+          return;
+        }
 
         const [sleephourStr, sleepminuteStr] = sleep.split(':');
         const sleephour = parseInt(sleephourStr, 10);
@@ -180,6 +186,35 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const sendSleepData = async () => {
+    const sleepTime = await AsyncStorage.getItem('sleepTime');
+    const wakeupTime = await AsyncStorage.getItem('wakeupTime');
+    const user_id = await AsyncStorage.getItem('user_id');
+
+    if(sleepTime && wakeupTime && user_id){
+      try{
+        const sleepHours = `${sleepTime} - ${wakeupTime}`;
+        setSleepHour(sleepHours);
+
+        const response = await fetch(`http://localhost:3000/sleep_data/${user_id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sleep: sleepHours,
+          }),
+        });
+
+        if(response.ok){
+          console.log('Sleep and wakeup times updated successfully');
+        }
+      }catch(err){
+        console.error('Error updating sleep and wakeup times', err);
+      }
+    }
+  }
+
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(async response => {
       const data = response.notification.request.content.data;
@@ -203,6 +238,10 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
 
     return () => subscription.remove();
   }, [])
+
+  useEffect(() => {
+    sendSleepData();
+  }, [sleepHour]);
 
   return (
     <SafeAreaView style={styles.container}>
