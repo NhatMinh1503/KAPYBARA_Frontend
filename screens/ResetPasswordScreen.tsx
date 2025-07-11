@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
+import { SERVER_IP } from '@env';
 
 type ResetPasswordScreenProps = NativeStackScreenProps<RootStackParamList, 'ResetPasswordScreen'>;
 
@@ -30,7 +31,7 @@ export default function ResetPasswordScreen({ route, navigation }: ResetPassword
     }
 
     try {
-      const response = await fetch('http://localhost:3000/email/reset_password', {
+      const response = await fetch(`${SERVER_IP}/email/reset_password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

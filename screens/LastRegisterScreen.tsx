@@ -18,6 +18,7 @@ import type { RootStackParamList } from '../types';
 import { PetRegisterProvider, usePetRegister } from '../contexts/PetRegisterContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { SERVER_IP } from '@env';
 
 type Props = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
@@ -46,7 +47,7 @@ export default function PetDetail() {
     try {
       console.log('Sending data:', fullData);
 
-      const response = await fetch('http://localhost:3000/pets', {
+      const response = await fetch(`${SERVER_IP}/pets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fullData),

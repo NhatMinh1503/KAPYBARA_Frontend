@@ -14,6 +14,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottieView from 'lottie-react-native';
+import { SERVER_IP } from '@env';
+
 // Type definitions
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -73,7 +75,7 @@ const handleAnimationChange = () => {
         const token = await AsyncStorage.getItem('token');
         if (!token) throw new Error('Token not found');
  
-          const response = await fetch('http://localhost:3000/fetch_weather', {
+          const response = await fetch(`${SERVER_IP}/fetch_weather`, {
             method: 'GET',  
             headers: {
               'Authorization': `Bearer ${token}`,

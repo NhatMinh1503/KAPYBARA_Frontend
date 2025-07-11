@@ -14,7 +14,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initHealthKit, getStepCount } from '../../Capybara_BE/services/healthkitService.js'; 
+import { initHealthKit, getStepCount } from '../healthkitService.js'; 
+import { SERVER_IP } from '@env';
  
 // Import tipe dari file types.ts yang terpusat
 import { MealType, MealData, FoodItem, RootStackParamList } from '../types';
@@ -59,7 +60,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
       const userId = await AsyncStorage.getItem('user_id');
       if (!userId) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
  
-      const response = await fetch(`http://localhost:3000/goals/${userId}`);
+      const response = await fetch(`${SERVER_IP}/goals/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch water goal');
  
       const data = await response.json();
@@ -105,6 +106,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
  
   }, [waterIntake]);
  
+  //if HealthKit doesn't work properly, use this function to handle steps intake manually
   // const handleStepsIntake = useCallback(async () => {
   //   const intake = parseInt(steps);
   //   if (isNaN(intake) || intake < 0) {
@@ -269,7 +271,7 @@ const DailyHealthScreen: React.FC<DailyHealthScreenProps> = ({ navigation, route
     try {
       const user_id = await AsyncStorage.getItem('user_id');
       const log_date = getLogDate();
-      await fetch('http://localhost:3000/daily-data', {
+      await fetch('${SERVER_IP}/daily-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id, log_date, calories: totalCalories, waterIntake: water, steps: steps }),

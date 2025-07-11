@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUserRegister } from '../contexts/UserRegisterContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { SERVER_IP } from '@env';
 
 type RootStackParamList = {
   Register2: undefined;
@@ -97,7 +98,7 @@ export default function Register2() {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/users', {
+      const response = await fetch(`${SERVER_IP}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(fullData),

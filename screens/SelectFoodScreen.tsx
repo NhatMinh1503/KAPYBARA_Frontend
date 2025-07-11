@@ -13,8 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Ensure these types are correctly defined in your types.ts file
 import { MealType, MealData, FoodItemDetailed, RootStackParamList } from '../types';
+import { SERVER_IP } from '@env';
 
 type SelectFoodRouteProp = RouteProp<RootStackParamList, 'SelectFoodScreen'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SelectFoodScreen'>;
@@ -47,7 +47,7 @@ const SelectFoodScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/food_data?name=${searchText.trim()}`, {
+      const response = await fetch(`${SERVER_IP}/food_data?name=${searchText.trim()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

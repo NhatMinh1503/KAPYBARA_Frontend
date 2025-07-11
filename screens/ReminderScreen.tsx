@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SERVER_IP } from '@env';
 
 type RootStackParamList = {
   IndexLogin: undefined;
@@ -132,7 +133,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
     }
     
     try{
-      const response = await fetch(`http://localhost:3000/goals/${user_id}`);
+      const response = await fetch(`${SERVER_IP}/goals/${user_id}`);
       if(response.ok){
         const data = await response.json();
         const sleep = data.sleepTime;
@@ -196,7 +197,7 @@ const ReminderScreen: React.FC<Props> = ({ navigation }) => {
         const sleepHours = `${sleepTime} - ${wakeupTime}`;
         setSleepHour(sleepHours);
 
-        const response = await fetch(`http://localhost:3000/sleep_data/${user_id}`, {
+        const response = await fetch(`${SERVER_IP}/sleep_data/${user_id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

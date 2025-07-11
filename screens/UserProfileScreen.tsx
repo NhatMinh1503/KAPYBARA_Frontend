@@ -13,6 +13,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SERVER_IP } from '@env';
  
 // Type definitions
 type RootStackParamList = {
@@ -55,7 +56,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         weight: parseInt(weight)
       }
      
-      const response = await fetch(`http://localhost:3000/users/update_data/${userId}`, {
+      const response = await fetch(`${SERVER_IP}/users/update_data/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
       const userId = await AsyncStorage.getItem('user_id');
       const token = await AsyncStorage.getItem('token');
     try{
-        const response = await fetch(`http://localhost:3000/users/getUser_data/${userId}`, {
+        const response = await fetch(`${SERVER_IP}/users/getUser_data/${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

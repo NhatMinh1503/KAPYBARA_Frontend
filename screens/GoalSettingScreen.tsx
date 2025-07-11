@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SERVER_IP } from '@env';
  
 // Type definitions
 type RootStackParamList = {
@@ -78,7 +79,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     try{
       if (!user_id) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
      
-      const response = await fetch(`http://localhost:3000/goals/${user_id}`, {
+      const response = await fetch(`${SERVER_IP}/goals/${user_id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -182,7 +183,7 @@ const GoalSettingScreen: React.FC<Props> = ({ navigation }) => {
     const token = await AsyncStorage.getItem('token');
  
     try{
-      const response = await fetch(`http://localhost:3000/goal_setting/${user_id}`, {
+      const response = await fetch(`${SERVER_IP}/goal_setting/${user_id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

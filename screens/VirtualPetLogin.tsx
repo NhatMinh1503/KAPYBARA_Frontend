@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
 import { SafeAreaView } from 'react-native-safe-area-context'; // Import SafeAreaView
 import type { RootStackParamList } from '../types';
+import { SERVER_IP } from '@env';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
@@ -26,7 +27,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch(`${SERVER_IP}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalData),

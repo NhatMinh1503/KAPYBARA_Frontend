@@ -11,6 +11,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
+import { SERVER_IP } from '@env';
 
 interface ForgotPasswordScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ForgotPasswordScreen'>;
@@ -26,7 +27,7 @@ export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScree
     };
 
     try {
-      const response = await fetch('http://localhost:3000/email/request_reset_password', {
+      const response = await fetch(`${SERVER_IP}/email/request_reset_password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
