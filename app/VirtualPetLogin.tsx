@@ -14,7 +14,7 @@ const LoginScreen  = () => {
   const handleLogin = async () => {
     try {
       const data = await loginUser(emailName, password);
-      Alert.alert('Login success!')
+      // Alert.alert('Login success!')
       router.push('/HomeScreen')
     } catch (error) {
       if (error instanceof Error) {

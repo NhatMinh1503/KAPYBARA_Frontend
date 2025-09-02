@@ -9,7 +9,7 @@ export async function getUserProfile() {
     throw new Error('ユーザー情報が見つかりません。ログインしてください。');
   }
 
-  const response = await fetch(`http://10.108.1.0:3000/users/getUser_data/${userId}`, {
+  const response = await fetch(`http://localhost:3000/users/getUser_data/${userId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

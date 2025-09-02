@@ -62,7 +62,7 @@ const DailyHealthScreen = () => {
       const userId = await AsyncStorage.getItem('user_id');
       if (!userId) return Alert.alert('エラー', 'ユーザーIDが見つかりません。ログインしてください。');
  
-      const response = await fetch(`http://10.108.1.0:3000/goals/${userId}`);
+      const response = await fetch(`http://192.168.1.12:3000/goals/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch water goal');
  
       const data = await response.json();
@@ -273,7 +273,7 @@ const DailyHealthScreen = () => {
     try {
       const user_id = await AsyncStorage.getItem('user_id');
       const log_date = getLogDate();
-      await fetch('http://10.108.1.0:3000/daily-data', {
+      await fetch('http://192.168.1.12:3000/daily-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id, log_date, calories: totalCalories, waterIntake: water, steps: steps }),
@@ -487,46 +487,50 @@ const DailyHealthScreen = () => {
   };
  
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-       
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>水分摂取</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={waterIntake}
-                onChangeText={setWaterIntake}
-                onSubmitEditing={handleWaterIntake}
-                placeholder=""
-                keyboardType="numeric"
-              />
-              <Text style={styles.unit}>ml</Text>
-            </View>
+  <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor="#f8f4ff" />
+    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+     
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>水分摂取</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={waterIntake}
+              onChangeText={setWaterIntake}
+              onSubmitEditing={handleWaterIntake}
+              placeholder=""
+              keyboardType="numeric"
+              returnKeyType="done" // Tambahkan ini
+              blurOnSubmit={true}  // Agar keyboard bisa hilang setelah enter
+            />
+            <Text style={styles.unit}>ml</Text>
           </View>
-          <Text style={styles.goalText}>目標まであと {remainingWater} ml必要です!</Text>
         </View>
- 
-       
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>歩数</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={steps}
-                onChangeText={setSteps}
-                onSubmitEditing={handleStepsIntake}
-                placeholder=""
-                keyboardType="numeric"
-              />
-              <Text style={styles.unit}>歩</Text>
-            </View>
+        <Text style={styles.goalText}>目標まであと {remainingWater} ml必要です!</Text>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>歩数</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={steps}
+              onChangeText={setSteps}
+              onSubmitEditing={handleStepsIntake}
+              placeholder=""
+              keyboardType="numeric"
+              returnKeyType="done" // Tambahkan ini
+              blurOnSubmit={true}  // Agar keyboard bisa hilang setelah enter
+            />
+            <Text style={styles.unit}>歩</Text>
           </View>
-          <Text style={styles.goalText}>目標まであと {remainingSteps} 歩必要です！</Text>
         </View>
+        <Text style={styles.goalText}>目標まであと {remainingSteps} 歩必要です！</Text>
+      </View>
+
  
        
         <View style={styles.section}>

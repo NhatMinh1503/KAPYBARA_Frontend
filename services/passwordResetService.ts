@@ -1,7 +1,7 @@
 // Function to verify the OTP code sent to the user's email
 export const verifyOTP = async (email: string, otp: string) => {
   try {
-    const response = await fetch(`http://10.108.1.0:3000/email/verify_otp`, {
+    const response = await fetch(`http://localhost:3000/email/verify_otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ export async function requestPasswordReset(email: string): Promise<{ success: bo
   }
 
   try {
-    const response = await fetch(`http://10.108.1.0:3000/email/request_reset_password`, {
+    const response = await fetch(`http://localhost:3000/email/request_reset_password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

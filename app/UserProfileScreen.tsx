@@ -80,6 +80,15 @@ const UserProfileScreen: React.FC = () => {
  
   return (
     <SafeAreaView style={styles.container}>
+        {/* Header hanya tombol Logout */}
+  <View style={styles.headerRight}>
+    <TouchableOpacity
+      style={styles.logoutButton}
+      onPress={() => router.push('/IndexLogin')}
+    >
+      <Text style={styles.logoutButtonText}>ログアウト</Text>
+    </TouchableOpacity>
+  </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>      
         {/* Avatar Placeholder */}
         <View style={styles.avatarContainer}>
@@ -166,9 +175,6 @@ const UserProfileScreen: React.FC = () => {
         
         <TouchableOpacity style={styles.updateButton} onPress={onUpdatePress}>
           <Text style={styles.updateButtonText}>更新</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.updateButton} onPress={() => router.push('/IndexLogin')}>
-          <Text style={styles.updateButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
  
@@ -279,6 +285,28 @@ const UserProfileScreen: React.FC = () => {
 };
  
 const styles = StyleSheet.create({
+
+  headerRight: {
+  flexDirection: 'row',
+  justifyContent: 'flex-end',
+  paddingHorizontal: 20,
+  paddingTop: 10,
+  paddingBottom: 15,
+
+},
+logoutButton: {
+  backgroundColor: '#FF3B30', // merah khas tombol logout
+  paddingVertical: 6,
+  paddingHorizontal: 15,
+  borderRadius: 20,
+},
+logoutButtonText: {
+  color: '#fff',
+  fontSize: 14,
+  fontWeight: '600',
+},
+
+
    activeNavItem: {
     opacity: 1,
   },

@@ -42,7 +42,7 @@ export default function PetDetail() {
     try {
       console.log('Sending data:', fullData);
 
-      const response = await fetch(`http://10.108.1.0:3000/pets`, {
+      const response = await fetch(`http://localhost:3000/pets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fullData),

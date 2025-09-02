@@ -27,7 +27,7 @@ export default function ResetPasswordScreen() {
     }
 
     try {
-      const response = await fetch(`http://10.108.1.0:3000/email/reset_password`, {
+      const response = await fetch(`http://localhost:3000/email/reset_password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

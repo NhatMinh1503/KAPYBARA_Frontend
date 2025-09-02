@@ -1,3 +1,7 @@
+export const options = {
+  headerShown: false,
+};
+
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';

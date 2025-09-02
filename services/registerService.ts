@@ -14,7 +14,7 @@ export interface UserRegistrationData {
 }
 
 export const registerUser = async (userData: UserRegistrationData): Promise<string> => {
-  const response = await fetch(`http://10.108.1.0:3000/users`, {
+  const response = await fetch(`http://localhost:3000/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userData),

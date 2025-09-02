@@ -118,7 +118,7 @@ const ReminderScreen: React.FC = () => {
     }
     
     try{
-      const response = await fetch(`http://10.108.1.0:3000/goals/${user_id}`);
+      const response = await fetch(`http://192.168.1.12:3000/goals/${user_id}`);
       if(response.ok){
         const data = await response.json();
         const sleep = data.sleepTime;
@@ -182,7 +182,7 @@ const ReminderScreen: React.FC = () => {
         const sleepHours = `${sleepTime} - ${wakeupTime}`;
         setSleepHour(sleepHours);
 
-        const response = await fetch(`http://10.108.1.0:3000/sleep_data/${user_id}`, {
+        const response = await fetch(`http://192.168.1.12:3000/sleep_data/${user_id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

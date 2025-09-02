@@ -34,7 +34,7 @@ export const fetchGoals = async (): Promise<GoalData | null> => {
       throw new Error('ユーザーIDが見つかりません。ログインしてください。');
     }
 
-    const response = await fetch(`http://10.108.1.0:3000/goals/${user_id}`, {
+    const response = await fetch(`http://localhost:3000/goals/${user_id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export const saveGoals = async (goals: GoalData): Promise<boolean> => {
     const user_id = await AsyncStorage.getItem('user_id');
     const token = await AsyncStorage.getItem('token');
 
-    const response = await fetch(`http://10.108.1.0:3000/goal_setting/${user_id}`, {
+    const response = await fetch(`http://localhost:3000/goal_setting/${user_id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

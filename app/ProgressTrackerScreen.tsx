@@ -111,7 +111,7 @@ const ProgressTrackerScreen: React.FC = () => {
   const goalsData = async () => {
     const user_id = await AsyncStorage.getItem('user_id');
     try{
-      const response = await fetch(`http://10.108.1.0:3000/goals/${user_id}`);
+      const response = await fetch(`http://localhost:3000/goals/${user_id}`);
       if(response.ok){
         const data = await response.json();
         setUserGoals(data);
@@ -146,7 +146,7 @@ const ProgressTrackerScreen: React.FC = () => {
         const user_id = await AsyncStorage.getItem('user_id'); // 🔁 thay bằng user thực tế
         const mode = periodMap[selectedPeriod] || 'month'; // hoặc từ selectedPeriod
 
-        const response = await fetch(`http://10.108.1.0:3000/water_data/${mode}?user_id=${user_id}`);
+        const response = await fetch(`http://localhost:3000/water_data/${mode}?user_id=${user_id}`);
         const json = await response.json();
 
         // Trường hợp API trả về dạng { labels: [...], data: [...] }
@@ -174,7 +174,7 @@ const ProgressTrackerScreen: React.FC = () => {
         const user_id = await AsyncStorage.getItem('user_id'); // thay bằng id thật
         const mode = periodMap[selectedPeriod] || 'month'; // hoặc selectedPeriod tương ứng
 
-        const response = await fetch(`http://10.108.1.0:3000/calories_data/${mode}?user_id=${user_id}`);
+        const response = await fetch(`http://localhost:3000/calories_data/${mode}?user_id=${user_id}`);
         const json = await response.json();
 
         const formatted = json.labels.map((label: string, index: number) => ({
@@ -201,7 +201,7 @@ const ProgressTrackerScreen: React.FC = () => {
         const user_id = await AsyncStorage.getItem('user_id'); // thay bằng id thật
         const mode = periodMap[selectedPeriod] || 'month'; // ví dụ 'month', 'week', etc.
 
-        const response = await fetch(`http://10.108.1.0:3000/steps_data/${mode}?user_id=${user_id}`);
+        const response = await fetch(`http://localhost:3000/steps_data/${mode}?user_id=${user_id}`);
         const json = await response.json();
 
         const formatted = json.labels.map((label: string, index: number) => ({
@@ -228,7 +228,7 @@ const ProgressTrackerScreen: React.FC = () => {
         const user_id = await AsyncStorage.getItem('user_id'); // Thay bằng user id thực tế
         const mode = periodMap[selectedPeriod] || 'month'; // '日', '週', '月', '6ヶ月', '年' có thể map thành 'day', 'week', 'month', '6months', 'year' tùy backend
 
-        const response = await fetch(`http://10.108.1.0:3000/weight_data/${mode}?user_id=${user_id}`);
+        const response = await fetch(`http://localhost:3000/weight_data/${mode}?user_id=${user_id}`);
         const json = await response.json();
 
         const formatted = json.labels.map((label: string, index: number) => ({

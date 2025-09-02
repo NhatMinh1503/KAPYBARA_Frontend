@@ -13,7 +13,7 @@ export const fetchWeatherData = async (): Promise<WeatherData> => {
     const token = await AsyncStorage.getItem('token');
     if (!token) throw new Error('Token not found');
 
-    const response = await fetch(`http://10.108.1.0:3000/fetch_weather`, {
+    const response = await fetch(`http://192.168.1.12:3000/fetch_weather`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

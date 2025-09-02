@@ -18,7 +18,7 @@ export async function updateUserProfile(data: UpdateUserProfileInput) {
     throw new Error('ユーザー情報が見つかりません。ログインしてください。');
   }
 
-  const response = await fetch(`http://10.108.1.0:3000/users/update_data/${userId}`, {
+  const response = await fetch(`http://localhost:3000/users/update_data/${userId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
